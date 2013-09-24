@@ -9,12 +9,13 @@
 def build(bld):
     module = bld.create_ns3_module('srp', ['core','internet'])
     module.source = [
-        'model/srp.cc',
+        'model/conf-loader.cc',
         'model/ipv4-srp-routing.cc',
         'model/srp-route-manager.cc',
         'model/srp-route-manager-impl.cc',
         'model/srp-router-interface.cc',
         'helper/ipv4-srp-routing-helper.cc',
+        'util/subnet.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('srp')
@@ -25,12 +26,13 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'srp'
     headers.source = [
-        'model/srp.h',
+        'model/conf-loader.h',
         'model/ipv4-srp-routing.h',
         'model/srp-route-manager.h',
         'model/srp-route-manager-impl.h',
         'model/srp-router-interface.h',
         'helper/ipv4-srp-routing-helper.h',
+        'util/subnet.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
