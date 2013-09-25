@@ -21,7 +21,10 @@ public:
 	string toString();
 	void setAddress(uint32_t address);
 	void setMask(uint32_t mask);
+	uint32_t getAddress();
+	uint32_t getMask();
 	string uint32ToAddress(uint32_t x);
+	bool equals(Subnet other);
 private:
 	uint32_t address;
 	uint32_t mask;

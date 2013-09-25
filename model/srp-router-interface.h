@@ -34,11 +34,23 @@
 #include "ns3/srp-route-manager.h"
 #include "ns3/ipv4-routing-table-entry.h"
 
+#include "ns3/subnet.h"
+
 namespace ns3 {
 
 class SRPRouter;
 class Ipv4SRPRouting;
 
+class SRPRoutingEntry{
+public:
+    SRPRoutingEntry();
+    SRPRoutingEntry(Subnet subnet, list<uint32_t> nodeList);
+    void removeNode(uint32_t index);
+    void addNode(uint32_t index);
+private:
+    Subnet mSubnet;
+    list<uint32_t> mNodeList; 
+};
 /**
  * @brief A single link record for a link state advertisement.
  *
@@ -592,6 +604,8 @@ public:
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);
 
+  void SetRoutingEntries (Ptr<list<SRPRoutingEntry>> entries);
+  Ptr<list<SRPRoutingEntry>> GetRoutingEntries (void);
 /**
  * @brief Get the Router ID associated with this SRP Router.
  *
@@ -708,6 +722,7 @@ public:
   bool WithdrawRoute (Ipv4Address network, Ipv4Mask networkMask);
 
 private:
+  int 
   virtual ~SRPRouter ();
   void ClearLSAs (void);
 
@@ -729,6 +744,7 @@ private:
 
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;
+  Ptr<list<SRPRoutingEntry>> m_routingEntries;
 
   typedef std::list<Ipv4RoutingTableEntry *> InjectedRoutes;
   typedef std::list<Ipv4RoutingTableEntry *>::const_iterator InjectedRoutesCI;

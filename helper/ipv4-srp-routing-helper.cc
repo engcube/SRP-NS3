@@ -53,6 +53,10 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
   node->AggregateObject (srpRouter);
 
+  NS_LOG_LOGIC ("Adding SRPRoutingEntry to node " << node->GetId ());
+  Ptr<list<SRPRoutingEntry>> srpRoutingEntries = CreateObject<list<SRPRoutingEntry>> ();
+  srpRouter->SetRoutingEntries (srpRoutingEntries);
+
   NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << node->GetId ());
   Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
   srpRouter->SetRoutingProtocol (srpRouting);

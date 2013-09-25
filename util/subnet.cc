@@ -65,4 +65,19 @@ string Subnet::toString(){
 	return uint32ToAddress(this->address)+"/"+uint32ToAddress(this->mask);
 }
 
+uint32_t Subnet::getAddress(){
+	return this->address;
+}
+
+uint32_t Subnet::getMask(){
+	return this->mask;
+}
+
+bool Subnet::equals(Subnet other){
+	if(other.getMask()==this->mask && other.getAddress()==this->address){
+		return TRUE;
+	}
+	return FALSE;
+}
+
 }

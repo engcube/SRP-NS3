@@ -41,6 +41,48 @@ namespace ns3 {
 //
 // ---------------------------------------------------------------------------
 
+SRPRoutingEntry::SRPRoutingEntry(){
+
+}
+SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, list<uint32_t> nodeList){
+    this->mSubnet = subnet;
+    this->mNodeList = nodeList;
+}
+
+void SRPRoutingEntry::removeNode(uint32_t index){
+    this->mNodeList.remove(index);
+}
+
+void SRPRoutingEntry::addNode(uint32_t index){
+    this->mNodeList.push_back(index);
+}
+
+Subnet SRPRoutingEntry::getSubnet(){
+    return this->mSubnet;
+}
+
+SRPGrid::SRPGrid(){
+
+}
+    
+void SRPGrid::addSRPGridEntry(SRPRoutingEntry entry){
+    m_entries.push_back(entry);
+}
+
+void SRPGrid::removeSRPGridEntry(Subnet subnet){
+    for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
+        if(it->getSubnet.equals(subnet)){
+            m_entries.erase(it);
+            break;
+        }
+    }
+}
+
+list<SRPRoutingEntry> SRPGrid::getSRPGrid(){
+    return m_entries;
+}
+
+
 SRPRoutingLinkRecord::SRPRoutingLinkRecord ()
   :
     m_linkId ("0.0.0.0"),
