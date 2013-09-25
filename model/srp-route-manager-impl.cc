@@ -40,6 +40,7 @@
 #include "ns3/candidate-queue.h"
 #include "ipv4-srp-routing.h"
 
+using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SRPRouteManagerImpl");
 
@@ -615,7 +616,6 @@ SRPRouteManagerImpl::BuildSRPRoutingDatabase ()
   for (NodeList::Iterator i = NodeList::Begin (); i != listEnd; i++)
     {
       Ptr<Node> node = *i;
-
       Ptr<SRPRouter> rtr = node->GetObject<SRPRouter> ();
 //
 // Ignore nodes that aren't participating in routing.
