@@ -30,6 +30,37 @@ NS_LOG_COMPONENT_DEFINE ("SRPRoutingHelper");
 
 namespace ns3 {
 
+void Ipv4SRPRoutingHelper::setCoreNum(int num){
+    m_CoreNum = num;
+}
+void Ipv4SRPRoutingHelper::setToRNum(int num){
+    m_ToRNum = num;
+}
+void Ipv4SRPRoutingHelper::setBorderNum(int num){
+    m_BorderNum = num;
+}
+void Ipv4SRPRoutingHelper::setSubnetMask(int mask){
+    m_SubnetMask = mask;
+}
+void Ipv4SRPRoutingHelper::setAddressStart(uint32_t address){
+    m_AddressStart = address;
+}
+int Ipv4SRPRoutingHelper::getCoreNum(){
+    return m_CoreNum;
+}
+int Ipv4SRPRoutingHelper::getToRNum(){
+    return m_ToRNum;
+}
+int Ipv4SRPRoutingHelper::getBorderNum(){
+    return m_BorderNum;
+}
+int Ipv4SRPRoutingHelper::getSubnetMask(){
+    return m_SubnetMask;
+}
+uint32_t Ipv4SRPRoutingHelper::getAddressStart(){
+    return m_AddressStart;
+}
+
 Ipv4SRPRoutingHelper::Ipv4SRPRoutingHelper ()
 {
 }
@@ -53,9 +84,10 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
   node->AggregateObject (srpRouter);
 
-  NS_LOG_LOGIC ("Adding SRPRoutingEntry to node " << node->GetId ());
-  Ptr<list<SRPRoutingEntry>> srpRoutingEntries = CreateObject<list<SRPRoutingEntry>> ();
-  srpRouter->SetRoutingEntries (srpRoutingEntries);
+  NS_LOG_LOGIC ("Adding SRPGrid to node " << node->GetId ());
+  Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
+  //mSRPGlobalInfo.
+  srpRouter->SetSRPGrid (mSRPGrid);
 
   NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << node->GetId ());
   Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();

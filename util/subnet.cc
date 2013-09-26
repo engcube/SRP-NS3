@@ -75,9 +75,9 @@ uint32_t Subnet::getMask(){
 
 bool Subnet::equals(Subnet other){
 	if(other.getMask()==this->mask && other.getAddress()==this->address){
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 }

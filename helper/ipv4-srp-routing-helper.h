@@ -22,6 +22,7 @@
 
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
+#include "ns3/srp-global-info.h"
 
 namespace ns3 {
 
@@ -83,6 +84,17 @@ public:
    *
    */
   static void RecomputeRoutingTables (void);
+  void setCoreNum(int num);
+  void setToRNum(int num);
+  void setBorderNum(int num);
+  void setSubnetMask(int mask);
+  void setAddressStart(uint32_t address);
+  int getCoreNum();
+  int getToRNum();
+  int getBorderNum();
+  int getSubnetMask();
+  uint32_t getAddressStart();
+  
 private:
   /**
    * \internal
@@ -90,7 +102,15 @@ private:
    * assignment and prevent the compiler from happily inserting its own.
    */
   Ipv4SRPRoutingHelper &operator = (const Ipv4SRPRoutingHelper &o);
+  int m_CoreNum;
+  int m_ToRNum;
+  int m_BorderNum;
+  int m_SubnetMask;
+  uint32_t m_AddressStart;
+
 };
+
+extern SRPGlobalInfo mSRPGlobalInfo;
 
 } // namespace ns3
 

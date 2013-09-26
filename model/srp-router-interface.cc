@@ -41,6 +41,21 @@ namespace ns3 {
 //
 // ---------------------------------------------------------------------------
 
+TypeId SRPGrid::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::SRPGrid")
+    .SetParent<Object> ();
+  return tid;
+}
+
+void SRPRouter::SetSRPGrid(Ptr<SRPGrid> grid){
+    this->m_SRPGrid = grid;
+}
+
+Ptr<SRPGrid> SRPRouter::GetSRPGrid (void){
+    return this->m_SRPGrid;
+}
+
 SRPRoutingEntry::SRPRoutingEntry(){
 
 }
@@ -71,7 +86,7 @@ void SRPGrid::addSRPGridEntry(SRPRoutingEntry entry){
 
 void SRPGrid::removeSRPGridEntry(Subnet subnet){
     for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
-        if(it->getSubnet.equals(subnet)){
+        if(it->getSubnet().equals(subnet)){
             m_entries.erase(it);
             break;
         }

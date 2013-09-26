@@ -47,9 +47,22 @@ public:
     SRPRoutingEntry(Subnet subnet, list<uint32_t> nodeList);
     void removeNode(uint32_t index);
     void addNode(uint32_t index);
+    Subnet getSubnet();
 private:
     Subnet mSubnet;
     list<uint32_t> mNodeList; 
+};
+
+class SRPGrid : public Object{
+public:
+    friend class SRPRoutingEntry;
+    static TypeId GetTypeId (void);
+    SRPGrid();
+    void addSRPGridEntry(SRPRoutingEntry entry);
+    void removeSRPGridEntry(Subnet subnet);
+    list<SRPRoutingEntry> getSRPGrid();
+private:
+    list<SRPRoutingEntry> m_entries;
 };
 /**
  * @brief A single link record for a link state advertisement.
@@ -604,8 +617,8 @@ public:
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);
 
-  void SetRoutingEntries (Ptr<list<SRPRoutingEntry>> entries);
-  Ptr<list<SRPRoutingEntry>> GetRoutingEntries (void);
+  void SetSRPGrid(Ptr<SRPGrid> grid);
+  Ptr<SRPGrid> GetSRPGrid (void);
 /**
  * @brief Get the Router ID associated with this SRP Router.
  *
@@ -722,7 +735,6 @@ public:
   bool WithdrawRoute (Ipv4Address network, Ipv4Mask networkMask);
 
 private:
-  int 
   virtual ~SRPRouter ();
   void ClearLSAs (void);
 
@@ -744,7 +756,8 @@ private:
 
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;
-  Ptr<list<SRPRoutingEntry>> m_routingEntries;
+
+  Ptr<SRPGrid> m_SRPGrid;
 
   typedef std::list<Ipv4RoutingTableEntry *> InjectedRoutes;
   typedef std::list<Ipv4RoutingTableEntry *>::const_iterator InjectedRoutesCI;
