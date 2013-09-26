@@ -23,8 +23,6 @@
 #include "ns3/ipv4-list-routing.h"
 #include "ns3/log.h"
 
-//#include <iostream>
-//using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SRPRoutingHelper");
 
@@ -61,6 +59,14 @@ uint32_t Ipv4SRPRoutingHelper::getAddressStart(){
     return m_AddressStart;
 }
 
+map<int, Subnet> Ipv4SRPRoutingHelper::getIndexSubnetMap() const{
+  return index_subnet_map;
+}
+
+void Ipv4SRPRoutingHelper::addItem2IndexSubnetMap(int index, Subnet subnet){
+  index_subnet_map[index] = subnet;
+}
+
 Ipv4SRPRoutingHelper::Ipv4SRPRoutingHelper ()
 {
 }
@@ -78,18 +84,81 @@ Ipv4SRPRoutingHelper::Copy (void) const
 Ptr<Ipv4RoutingProtocol>
 Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
 {
-  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
-                node->GetId ());
 
+  NodeType type;
+  int id = node->GetId();
+  if( id < m_CoreNum ){
+      type = CORE;
+  }else if( id < m_ToRNum){
+      type = TOR;
+  }else {
+      type = BORDER;
+  }
+
+  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
+                id);
   Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
   node->AggregateObject (srpRouter);
 
-  NS_LOG_LOGIC ("Adding SRPGrid to node " << node->GetId ());
+
+  NS_LOG_LOGIC ("Adding SRPGrid to node " << id);
   Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
+  if(type == CORE){
+      for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+          map<int, int> mmap;
+          mmap[i] = 1;
+          SRPRoutingEntry entry(getIndexSubnetMap()[id], mmap);
+          mSRPGrid->addSRPGridEntry(entry);
+      }
+      map<int, int> mmap;
+      for(int i = m_CoreNum+m_ToRNum; i<m_CoreNum+m_ToRNum+m_BorderNum; i++){
+          mmap[i] = 1;
+      }
+      Subnet subnet(0,0);
+      SRPRoutingEntry entry(subnet, mmap);
+      entry.setDescription("B_exit");
+      mSRPGrid->addSRPGridEntry(entry);
+  }else if(type == TOR){
+      for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+         if(i==id){
+            continue;
+         }
+         map<int, int> mmap;
+         for(int j=0; j < m_CoreNum; j++){
+            mmap[j] = 1;
+         }
+         SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
+         mSRPGrid->addSRPGridEntry(entry);
+      }
+      map<int, int> mmap;
+      for(int j=0; j < m_CoreNum; j++){
+        mmap[j] = 1;
+      }
+      Subnet subnet(0,0);
+      SRPRoutingEntry entry(subnet, mmap);
+      entry.setDescription("B_exit");
+      mSRPGrid->addSRPGridEntry(entry);
+
+  }else{ //NodeType.BORDER
+      for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+         map<int, int> mmap;
+         for(int j=0; j < m_CoreNum; j++){
+            mmap[j] = 1;
+         }
+         for(int j=m_CoreNum+m_ToRNum; j<m_CoreNum+m_ToRNum+m_BorderNum; j++){
+            if(j==id){
+              continue;
+            }
+            mmap[j] = 3;
+         }
+         SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
+         mSRPGrid->addSRPGridEntry(entry);
+      }
+  }
   //mSRPGlobalInfo.
   srpRouter->SetSRPGrid (mSRPGrid);
 
-  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << node->GetId ());
+  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
   Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
   srpRouter->SetRoutingProtocol (srpRouting);
 

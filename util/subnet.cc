@@ -37,21 +37,21 @@ void Subnet::setMask(uint32_t mask){
 	this->mask = mask;
 }
 
-Subnet Subnet::nextSubnet(){
+Subnet Subnet::nextSubnet() const{
 	Subnet subnet;
 	subnet.setAddress(this->address + (~this->mask+1));
 	subnet.setMask(this->mask);
 	return subnet;
 }
 
-Subnet Subnet::prevSubnet(){
+Subnet Subnet::prevSubnet() const{
 	Subnet subnet;
 	subnet.setAddress(this->address - (~this->mask+1));
 	subnet.setMask(this->mask);
 	return subnet;
 }
 
-string Subnet::uint32ToAddress(uint32_t x){
+string Subnet::uint32ToAddress(uint32_t x) const{
 	int a = x>>24;
 	int b = (x<<8)>>24;
 	int c = (x<<16)>>24;
@@ -61,19 +61,19 @@ string Subnet::uint32ToAddress(uint32_t x){
 	return ss.str();
 }
 
-string Subnet::toString(){
+string Subnet::toString() const{
 	return uint32ToAddress(this->address)+"/"+uint32ToAddress(this->mask);
 }
 
-uint32_t Subnet::getAddress(){
+uint32_t Subnet::getAddress() const{
 	return this->address;
 }
 
-uint32_t Subnet::getMask(){
+uint32_t Subnet::getMask() const{
 	return this->mask;
 }
 
-bool Subnet::equals(Subnet other){
+bool Subnet::equals(Subnet other) const{
 	if(other.getMask()==this->mask && other.getAddress()==this->address){
 		return true;
 	}

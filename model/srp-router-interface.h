@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 #include <list>
+#include <string>
+
 #include "ns3/object.h"
 #include "ns3/ptr.h"
 #include "ns3/node.h"
@@ -36,6 +38,8 @@
 
 #include "ns3/subnet.h"
 
+using namespace std;
+
 namespace ns3 {
 
 class SRPRouter;
@@ -44,24 +48,34 @@ class Ipv4SRPRouting;
 class SRPRoutingEntry{
 public:
     SRPRoutingEntry();
-    SRPRoutingEntry(Subnet subnet, list<uint32_t> nodeList);
-    void removeNode(uint32_t index);
-    void addNode(uint32_t index);
+    SRPRoutingEntry(Subnet subnet, map<int, int> nodeList);
+    void removeNode(int index);
+    void addNode(int index, int status);
     Subnet getSubnet();
+    string getDescription();
+    void setDescription(string desc);
 private:
     Subnet mSubnet;
-    list<uint32_t> mNodeList; 
+    map<int, int> mNodeList; 
+    string m_description;
 };
 
 class SRPGrid : public Object{
 public:
+    enum GridType{
+        CORE = 0,
+        TOR,
+        BORDER,
+    };
     friend class SRPRoutingEntry;
     static TypeId GetTypeId (void);
     SRPGrid();
     void addSRPGridEntry(SRPRoutingEntry entry);
     void removeSRPGridEntry(Subnet subnet);
     list<SRPRoutingEntry> getSRPGrid();
+    void setType(GridType type);
 private:
+    GridType m_type;
     list<SRPRoutingEntry> m_entries;
 };
 /**

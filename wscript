@@ -14,7 +14,6 @@ def build(bld):
         'model/srp-route-manager.cc',
         'model/srp-route-manager-impl.cc',
         'model/srp-router-interface.cc',
-        'model/srp-global-info.cc',
         'helper/ipv4-srp-routing-helper.cc',
         'util/subnet.cc',
         ]
@@ -32,7 +31,6 @@ def build(bld):
         'model/srp-route-manager.h',
         'model/srp-route-manager-impl.h',
         'model/srp-router-interface.h',
-        'model/srp-global-info.h',
         'helper/ipv4-srp-routing-helper.h',
         'util/subnet.h',
         ]

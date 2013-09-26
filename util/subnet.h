@@ -16,15 +16,15 @@ class Subnet
 public:
 	Subnet();
 	Subnet(uint32_t address, int mask);
-	Subnet nextSubnet();
-	Subnet prevSubnet();
-	string toString();
+	Subnet nextSubnet() const;
+	Subnet prevSubnet() const;
+	string toString() const;
 	void setAddress(uint32_t address);
 	void setMask(uint32_t mask);
-	uint32_t getAddress();
-	uint32_t getMask();
-	string uint32ToAddress(uint32_t x);
-	bool equals(Subnet other);
+	uint32_t getAddress() const;
+	uint32_t getMask() const;
+	string uint32ToAddress(uint32_t x) const;
+	bool equals(Subnet other) const;
 private:
 	uint32_t address;
 	uint32_t mask;

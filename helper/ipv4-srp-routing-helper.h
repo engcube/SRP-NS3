@@ -20,9 +20,14 @@
 #ifndef IPV4_SRP_ROUTING_HELPER_H
 #define IPV4_SRP_ROUTING_HELPER_H
 
+#include <map>
+#include <iostream>
+
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
-#include "ns3/srp-global-info.h"
+#include "ns3/subnet.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -94,14 +99,27 @@ public:
   int getBorderNum();
   int getSubnetMask();
   uint32_t getAddressStart();
-  
+
+  map<int, Subnet> getIndexSubnetMap() const;
+  void addItem2IndexSubnetMap(int index, Subnet subnet);
+
 private:
+
+  enum NodeType{
+      CORE = 0,
+      TOR,
+      BORDER,
+  };
+
   /**
    * \internal
    * \brief Assignment operator declared private and not implemented to disallow
    * assignment and prevent the compiler from happily inserting its own.
    */
   Ipv4SRPRoutingHelper &operator = (const Ipv4SRPRoutingHelper &o);
+
+  map<int, Subnet> index_subnet_map;
+
   int m_CoreNum;
   int m_ToRNum;
   int m_BorderNum;
@@ -109,8 +127,6 @@ private:
   uint32_t m_AddressStart;
 
 };
-
-extern SRPGlobalInfo mSRPGlobalInfo;
 
 } // namespace ns3
 

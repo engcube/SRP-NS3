@@ -59,17 +59,17 @@ Ptr<SRPGrid> SRPRouter::GetSRPGrid (void){
 SRPRoutingEntry::SRPRoutingEntry(){
 
 }
-SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, list<uint32_t> nodeList){
+SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, map<int, int> nodeList){
     this->mSubnet = subnet;
     this->mNodeList = nodeList;
 }
 
-void SRPRoutingEntry::removeNode(uint32_t index){
-    this->mNodeList.remove(index);
+void SRPRoutingEntry::removeNode(int index){
+    this->mNodeList.erase(index);
 }
 
-void SRPRoutingEntry::addNode(uint32_t index){
-    this->mNodeList.push_back(index);
+void SRPRoutingEntry::addNode(int index, int status){
+    this->mNodeList[index] = status;
 }
 
 Subnet SRPRoutingEntry::getSubnet(){
@@ -79,7 +79,20 @@ Subnet SRPRoutingEntry::getSubnet(){
 SRPGrid::SRPGrid(){
 
 }
-    
+
+void SRPGrid::setType(GridType type){
+    m_type = type;
+}
+
+string SRPRoutingEntry::getDescription(){
+    return m_description;
+}
+
+void SRPRoutingEntry::setDescription(string desc){
+    m_description = desc;
+}
+
+
 void SRPGrid::addSRPGridEntry(SRPRoutingEntry entry){
     m_entries.push_back(entry);
 }
