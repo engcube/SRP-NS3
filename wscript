@@ -11,8 +11,8 @@ def build(bld):
     module.source = [
         'model/conf-loader.cc',
         'model/ipv4-srp-routing.cc',
-        'model/srp-route-manager.cc',
-        'model/srp-route-manager-impl.cc',
+        #'model/srp-route-manager.cc',
+        #'model/srp-route-manager-impl.cc',
         'model/srp-router-interface.cc',
         'helper/ipv4-srp-routing-helper.cc',
         'util/subnet.cc',
@@ -28,8 +28,8 @@ def build(bld):
     headers.source = [
         'model/conf-loader.h',
         'model/ipv4-srp-routing.h',
-        'model/srp-route-manager.h',
-        'model/srp-route-manager-impl.h',
+        #'model/srp-route-manager.h',
+        #'model/srp-route-manager-impl.h',
         'model/srp-router-interface.h',
         'helper/ipv4-srp-routing-helper.h',
         'util/subnet.h',

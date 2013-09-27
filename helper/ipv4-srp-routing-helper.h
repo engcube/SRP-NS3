@@ -23,9 +23,15 @@
 #include <map>
 #include <iostream>
 
+#include "ns3/srp-router-interface.h"
+ 
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
 #include "ns3/subnet.h"
+
+
+#include "ns3/ipv4-srp-routing.h"
+#include "ns3/ipv4-list-routing.h"
 
 using namespace std;
 
@@ -89,6 +95,9 @@ public:
    *
    */
   static void RecomputeRoutingTables (void);
+
+  static uint32_t AllocateRouterId ();
+
   void setCoreNum(int num);
   void setToRNum(int num);
   void setBorderNum(int num);
@@ -102,6 +111,8 @@ public:
 
   map<int, Subnet> getIndexSubnetMap() const;
   void addItem2IndexSubnetMap(int index, Subnet subnet);
+  
+  void CreateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
 
 private:
 

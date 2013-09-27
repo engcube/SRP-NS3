@@ -12,7 +12,7 @@ Subnet::Subnet(){
 
 Subnet::Subnet(uint32_t address, int mask){
 	uint32_t mask_tmp = 0;
-	if (mask>0 && mask < 32){
+	if (mask>=0 && mask < 32){
 		for(int i=31;i>=32-mask;i--){
 			mask_tmp += (uint32_t)pow(2, i);
 			//cout << mask_tmp << endl;

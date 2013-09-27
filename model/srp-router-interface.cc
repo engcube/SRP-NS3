@@ -40,7 +40,6 @@ namespace ns3 {
 // SRPRoutingLinkRecord Implementation
 //
 // ---------------------------------------------------------------------------
-
 TypeId SRPGrid::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SRPGrid")
@@ -80,6 +79,22 @@ SRPGrid::SRPGrid(){
 
 }
 
+string SRPRoutingEntry::toString(){
+    stringstream ss;
+    ss << mSubnet.toString() << ":" << m_description << "\n";
+    for(map<int, int>::iterator it = mNodeList.begin(); it!=mNodeList.end();++it){
+        ss << it->first << ":" << it->second << "\t";
+    }
+    return ss.str();
+}
+
+string SRPGrid::toString(){
+    stringstream ss;
+    for(list<SRPRoutingEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it){
+        ss << it->toString() << endl;
+    }
+    return ss.str();
+}
 void SRPGrid::setType(GridType type){
     m_type = type;
 }
@@ -588,7 +603,7 @@ SRPRouter::SRPRouter ()
   : m_LSAs ()
 {
   NS_LOG_FUNCTION (this);
-  m_routerId.Set (SRPRouteManager::AllocateRouterId ());
+  m_routerId.Set (Ipv4SRPRoutingHelper::AllocateRouterId ());
 }
 
 SRPRouter::~SRPRouter ()

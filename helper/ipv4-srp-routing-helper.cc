@@ -18,9 +18,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "ipv4-srp-routing-helper.h"
-#include "ns3/srp-router-interface.h"
-#include "ns3/ipv4-srp-routing.h"
-#include "ns3/ipv4-list-routing.h"
 #include "ns3/log.h"
 
 
@@ -84,9 +81,30 @@ Ipv4SRPRoutingHelper::Copy (void) const
 Ptr<Ipv4RoutingProtocol>
 Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
 {
-
-  NodeType type;
   int id = node->GetId();
+
+
+  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
+                id);
+  Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
+  node->AggregateObject (srpRouter);
+
+  NS_LOG_LOGIC ("Adding SRPGrid to node " << id);
+  Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
+  CreateSRPGrid(id, mSRPGrid);
+  
+  //mSRPGlobalInfo.
+  srpRouter->SetSRPGrid (mSRPGrid);
+
+  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
+  Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
+  srpRouter->SetRoutingProtocol (srpRouting);
+
+  return srpRouting;
+}
+
+void Ipv4SRPRoutingHelper::CreateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
+  NodeType type;
   if( id < m_CoreNum ){
       type = CORE;
   }else if( id < m_ToRNum){
@@ -95,19 +113,11 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
       type = BORDER;
   }
 
-  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
-                id);
-  Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
-  node->AggregateObject (srpRouter);
-
-
-  NS_LOG_LOGIC ("Adding SRPGrid to node " << id);
-  Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
   if(type == CORE){
       for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
           map<int, int> mmap;
           mmap[i] = 1;
-          SRPRoutingEntry entry(getIndexSubnetMap()[id], mmap);
+          SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
           mSRPGrid->addSRPGridEntry(entry);
       }
       map<int, int> mmap;
@@ -155,28 +165,29 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
          mSRPGrid->addSRPGridEntry(entry);
       }
   }
-  //mSRPGlobalInfo.
-  srpRouter->SetSRPGrid (mSRPGrid);
-
-  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
-  Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
-  srpRouter->SetRoutingProtocol (srpRouting);
-
-  return srpRouting;
 }
 
 void 
 Ipv4SRPRoutingHelper::PopulateRoutingTables (void)
 {
-  SRPRouteManager::BuildSRPRoutingDatabase ();
-  SRPRouteManager::InitializeRoutes ();
+
+  //SRPRouteManager::BuildSRPRoutingDatabase ();
+  //SRPRouteManager::InitializeRoutes ();
 }
 void 
 Ipv4SRPRoutingHelper::RecomputeRoutingTables (void)
 {
-  SRPRouteManager::DeleteSRPRoutes ();
-  SRPRouteManager::BuildSRPRoutingDatabase ();
-  SRPRouteManager::InitializeRoutes ();
+  //SRPRouteManager::DeleteSRPRoutes ();
+  //SRPRouteManager::BuildSRPRoutingDatabase ();
+  //SRPRouteManager::InitializeRoutes ();
+}
+
+uint32_t
+Ipv4SRPRoutingHelper::AllocateRouterId (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+  static uint32_t routerId = 0;
+  return routerId++;
 }
 
 

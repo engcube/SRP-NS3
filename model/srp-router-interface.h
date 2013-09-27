@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <list>
 #include <string>
+#include <sstream>
 
 #include "ns3/object.h"
 #include "ns3/ptr.h"
@@ -33,15 +34,18 @@
 #include "ns3/ipv4-address.h"
 #include "ns3/net-device-container.h"
 #include "ns3/bridge-net-device.h"
-#include "ns3/srp-route-manager.h"
+//#include "ns3/srp-route-manager.h"
 #include "ns3/ipv4-routing-table-entry.h"
 
 #include "ns3/subnet.h"
+#include "ns3/ipv4-srp-routing-helper.h"
 
 using namespace std;
 
 namespace ns3 {
 
+class SRPRoutingEntry;
+class SRPGrid;
 class SRPRouter;
 class Ipv4SRPRouting;
 
@@ -54,6 +58,7 @@ public:
     Subnet getSubnet();
     string getDescription();
     void setDescription(string desc);
+    string toString();
 private:
     Subnet mSubnet;
     map<int, int> mNodeList; 
@@ -74,6 +79,7 @@ public:
     void removeSRPGridEntry(Subnet subnet);
     list<SRPRoutingEntry> getSRPGrid();
     void setType(GridType type);
+    string toString();
 private:
     GridType m_type;
     list<SRPRoutingEntry> m_entries;

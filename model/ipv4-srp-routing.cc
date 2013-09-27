@@ -556,9 +556,9 @@ Ipv4SRPRouting::NotifyInterfaceUp (uint32_t i)
   NS_LOG_FUNCTION (this << i);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      SRPRouteManager::DeleteSRPRoutes ();
-      SRPRouteManager::BuildSRPRoutingDatabase ();
-      SRPRouteManager::InitializeRoutes ();
+      //SRPRouteManager::DeleteSRPRoutes ();
+      //SRPRouteManager::BuildSRPRoutingDatabase ();
+      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -568,9 +568,9 @@ Ipv4SRPRouting::NotifyInterfaceDown (uint32_t i)
   NS_LOG_FUNCTION (this << i);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      SRPRouteManager::DeleteSRPRoutes ();
-      SRPRouteManager::BuildSRPRoutingDatabase ();
-      SRPRouteManager::InitializeRoutes ();
+      //SRPRouteManager::DeleteSRPRoutes ();
+      //SRPRouteManager::BuildSRPRoutingDatabase ();
+      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -580,9 +580,9 @@ Ipv4SRPRouting::NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress addre
   NS_LOG_FUNCTION (this << interface << address);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      SRPRouteManager::DeleteSRPRoutes ();
-      SRPRouteManager::BuildSRPRoutingDatabase ();
-      SRPRouteManager::InitializeRoutes ();
+      //SRPRouteManager::DeleteSRPRoutes ();
+      //SRPRouteManager::BuildSRPRoutingDatabase ();
+      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -592,9 +592,9 @@ Ipv4SRPRouting::NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress ad
   NS_LOG_FUNCTION (this << interface << address);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      SRPRouteManager::DeleteSRPRoutes ();
-      SRPRouteManager::BuildSRPRoutingDatabase ();
-      SRPRouteManager::InitializeRoutes ();
+      //SRPRouteManager::DeleteSRPRoutes ();
+      //SRPRouteManager::BuildSRPRoutingDatabase ();
+      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
