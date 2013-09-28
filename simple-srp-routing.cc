@@ -44,6 +44,8 @@
 #include "ns3/srp.h"
 #include "ns3/conf-loader.h"
 #include "ns3/subnet.h"
+#include "ns3/srp-router-interface.h"
+
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -63,28 +65,37 @@ main (int argc, char *argv[])
 {
   // Users may find it convenient to turn on explicit debugging
   // for selected modules; the below lines suggest how to do this
-#if 0 
+//#if 0 
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
-#endif
+  //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
+//#endif
 
   //my code----------------------
   //-----------------------------
   //string filename = "/home/engcube/Workspace/epcc/dce/source/ns-3.17/src/srp/grid.conf";
   //ConfLoader conf(filename);
   //cout << filename << endl;
+
+  Ipv4SRPRoutingHelper ipv4SRPRoutingHelper;
+
   int CORE_NUM = 2;
   int TOR_NUM = 4;
   int BORDER_NUM = 2;
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
-  Subnet subnet(ADDRESS_START, SUBNET_MASK);
+
   cout << "Core number:" << CORE_NUM << endl;
   cout << "ToR number:" << TOR_NUM << endl;
   cout << "Border number:" << BORDER_NUM << endl;
   cout << "Netmask number:" << SUBNET_MASK << endl;
-  cout << "Start address:" << subnet.uint32ToAddress(ADDRESS_START) << endl;
-  cout << subnet.toString() << endl;
-  cout << subnet.nextSubnet().toString() << endl;
+
+  ipv4SRPRoutingHelper.setCoreNum(CORE_NUM);
+  ipv4SRPRoutingHelper.setToRNum(TOR_NUM);
+  ipv4SRPRoutingHelper.setBorderNum(BORDER_NUM);
+  ipv4SRPRoutingHelper.setSubnetMask(SUBNET_MASK);
+  ipv4SRPRoutingHelper.setAddressStart(ADDRESS_START);
+
+  int total = CORE_NUM+TOR_NUM+BORDER_NUM;
   //------------------------------
   //end of my code----------------
 
@@ -109,7 +120,14 @@ main (int argc, char *argv[])
   //my code----------------------
   //-----------------------------
   NodeContainer c;
-  c.Create (CORE_NUM+TOR_NUM+BORDER_NUM);
+  c.Create (total);
+
+  Subnet subnet(ADDRESS_START, SUBNET_MASK);
+  ipv4SRPRoutingHelper.addItem2IndexSubnetMap(CORE_NUM, subnet);
+  for(int i=CORE_NUM+1; i<CORE_NUM+TOR_NUM; i++){
+      Subnet s = ipv4SRPRoutingHelper.getIndexSubnetMap()[i-1].nextSubnet();
+      ipv4SRPRoutingHelper.addItem2IndexSubnetMap(i, s);
+  }
 
   list<NodeContainer> nodeContainers;
 
@@ -121,7 +139,7 @@ main (int argc, char *argv[])
   }
 
   for(int i=0; i<CORE_NUM; i++){
-      for(int j=CORE_NUM+TOR_NUM; j<CORE_NUM+TOR_NUM+BORDER_NUM; j++){
+      for(int j=CORE_NUM+TOR_NUM; j<total; j++){
           NodeContainer ninj = NodeContainer (c.Get(i), c.Get(j));
           nodeContainers.push_back(ninj);
       }
@@ -177,10 +195,23 @@ main (int argc, char *argv[])
       ipv4InterfaceContainers.push_back(ii);
   }
   
-  for(list<Ipv4InterfaceContainer>::iterator it= ipv4InterfaceContainers.begin(); it!=ipv4InterfaceContainers.end(); ++it){
+  /*for(list<Ipv4InterfaceContainer>::iterator it= ipv4InterfaceContainers.begin(); it!=ipv4InterfaceContainers.end(); ++it){
       cout << it->GetAddress(0) << endl;
       cout << it->GetAddress(1) << endl;
+  }*/
+
+  for(int i=0; i<total; i++){
+      ipv4SRPRoutingHelper.Create(c.Get(i));
   }
+
+  /*map<int, Subnet> smap = ipv4SRPRoutingHelper.getIndexSubnetMap();
+  for(map<int, Subnet>::iterator it = smap.begin(); it != smap.end(); ++it){
+      cout << it->first <<"   "<<it->second.toString()<<endl;
+  }
+  for(int i=0; i<total; i++){
+      //cout << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid() << endl;
+      cout << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid()->toString() << endl;
+  }*/
 
   //------------------------------
   //end of my code----------------
@@ -197,7 +228,7 @@ main (int argc, char *argv[])
 
   // Create router nodes, initialize routing database and set up the routing
   // tables in the nodes.
-  Ipv4SRPRoutingHelper::PopulateRoutingTables ();
+  //ipv4SRPRoutingHelper.PopulateRoutingTables ();
 
   // Create the OnOff application to send UDP datagrams of size
   // 210 bytes at a rate of 448 Kb/s
