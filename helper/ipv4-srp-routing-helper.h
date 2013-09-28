@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "ns3/srp-router-interface.h"
- 
+
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
 #include "ns3/subnet.h"
@@ -98,6 +98,8 @@ public:
 
   static uint32_t AllocateRouterId ();
 
+  void CreateSRPGrid(Ptr<Node> node) const;
+
   void setCoreNum(int num);
   void setToRNum(int num);
   void setBorderNum(int num);
@@ -109,10 +111,10 @@ public:
   int getSubnetMask();
   uint32_t getAddressStart();
 
+
   map<int, Subnet> getIndexSubnetMap() const;
   void addItem2IndexSubnetMap(int index, Subnet subnet);
   
-  void CreateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
 
 private:
 

@@ -78,32 +78,12 @@ Ipv4SRPRoutingHelper::Copy (void) const
   return new Ipv4SRPRoutingHelper (*this);
 }
 
-Ptr<Ipv4RoutingProtocol>
-Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
-{
+void Ipv4SRPRoutingHelper::CreateSRPGrid(Ptr<Node> node) const{
+
   int id = node->GetId();
-
-
-  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
-                id);
-  Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
-  node->AggregateObject (srpRouter);
-
   NS_LOG_LOGIC ("Adding SRPGrid to node " << id);
   Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
-  CreateSRPGrid(id, mSRPGrid);
-  
-  //mSRPGlobalInfo.
-  srpRouter->SetSRPGrid (mSRPGrid);
 
-  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
-  Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
-  srpRouter->SetRoutingProtocol (srpRouting);
-
-  return srpRouting;
-}
-
-void Ipv4SRPRoutingHelper::CreateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
   NodeType type;
   if( id < m_CoreNum ){
       type = CORE;
@@ -165,6 +145,29 @@ void Ipv4SRPRoutingHelper::CreateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
          mSRPGrid->addSRPGridEntry(entry);
       }
   }
+
+  node->GetObject<SRPRouter>()->SetSRPGrid (mSRPGrid);
+}
+
+Ptr<Ipv4RoutingProtocol>
+Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
+{
+  int id = node->GetId();
+
+
+  NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
+                id);
+  Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
+  node->AggregateObject (srpRouter);
+  
+  CreateSRPGrid(node);
+  
+  //mSRPGlobalInfo.
+  NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
+  Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
+  srpRouter->SetRoutingProtocol (srpRouting);
+
+  return srpRouting;
 }
 
 void 
