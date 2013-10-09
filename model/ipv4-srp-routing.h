@@ -29,6 +29,9 @@
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/random-variable-stream.h"
 
+#include <iostream>
+using namespace std;
+
 namespace ns3 {
 
 class Packet;

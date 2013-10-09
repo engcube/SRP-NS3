@@ -200,6 +200,7 @@ main (int argc, char *argv[])
       cout << it->GetAddress(1) << endl;
   }*/
 
+  //set up Grid-info
   for(int i=0; i<total; i++){
       ipv4SRPRoutingHelper.Create(c.Get(i));
   }
@@ -233,7 +234,26 @@ main (int argc, char *argv[])
   // Create the OnOff application to send UDP datagrams of size
   // 210 bytes at a rate of 448 Kb/s
   NS_LOG_INFO ("Create Applications.");
-  //uint16_t port = 9;   // Discard port (RFC 863)
+  
+  uint16_t port = 9;   // Discard port (RFC 863)
+  OnOffHelper onoff ("ns3::UdpSocketFactory", 
+                     Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
+
+  onoff.SetConstantRate (DataRate ("448kb/s"));
+  ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM));
+
+  apps.Start (Seconds (1.0));
+  apps.Stop (Seconds (5.0));
+  
+  // Create a packet sink to receive these packets
+  PacketSinkHelper sink ("ns3::UdpSocketFactory",
+                         Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
+  for(int i=CORE_NUM; i< CORE_NUM+TOR_NUM;i++){  
+    apps = sink.Install (c.Get (i));
+  }
+  apps.Start (Seconds (1.0));
+  apps.Stop (Seconds (5.0));
+
   //OnOffHelper onoff ("ns3::UdpSocketFactory", 
   //                   Address (InetSocketAddress (i3i2.GetAddress (0), port)));
   //onoff.SetConstantRate (DataRate ("448kb/s"));
@@ -260,28 +280,28 @@ main (int argc, char *argv[])
   //apps.Start (Seconds (1.1));
   //apps.Stop (Seconds (10.0));
 
-  //AsciiTraceHelper ascii;
-  //p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
-  //p2p.EnablePcapAll ("simple-SRP-routing");
+  AsciiTraceHelper ascii;
+  p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
+  p2p.EnablePcapAll ("simple-SRP-routing");
 
   // Flow Monitor
-  //Ptr<FlowMonitor> flowmon;
-  //FlowMonitorHelper flowmonHelper;
-  //if (enableFlowMonitor)
-  //  {
-  //    flowmon = flowmonHelper.InstallAll ();
-  //  }
+  Ptr<FlowMonitor> flowmon;
+  FlowMonitorHelper flowmonHelper;
+  if (enableFlowMonitor)
+    {
+      flowmon = flowmonHelper.InstallAll ();
+    }
 
   NS_LOG_INFO ("Run Simulation.");
-  //Simulator::Stop (Seconds (11));
-  //Simulator::Run ();
+  Simulator::Stop (Seconds (11));
+  Simulator::Run ();
   NS_LOG_INFO ("Done.");
 
-  //if (enableFlowMonitor)
-  //  {
-  //   flowmon->SerializeToXmlFile ("simple-SRP-routing.flowmon", false, false);
-  //  }
+  if (enableFlowMonitor)
+    {
+     flowmon->SerializeToXmlFile ("simple-SRP-routing.flowmon", false, false);
+    }
 
-  //Simulator::Destroy ();
+  Simulator::Destroy ();
   return 0;
 }
