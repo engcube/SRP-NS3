@@ -45,7 +45,7 @@
 #include "ns3/conf-loader.h"
 #include "ns3/subnet.h"
 #include "ns3/srp-router-interface.h"
-
+#include "ns3/ipv4-srp-routing-helper.h"
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -53,7 +53,6 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/flow-monitor-helper.h"
-#include "ns3/ipv4-srp-routing-helper.h"
 
 using namespace ns3;
 using namespace std;
@@ -67,6 +66,7 @@ main (int argc, char *argv[])
   // for selected modules; the below lines suggest how to do this
 //#if 0 
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
+  //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
 //#endif
 
@@ -154,13 +154,21 @@ main (int argc, char *argv[])
   //NodeContainer n3n2 = NodeContainer (c.Get (3), c.Get (2));
 
   InternetStackHelper internet;
+
+  Ipv4StaticRoutingHelper staticRouting;
+  Ipv4ListRoutingHelper listRouting;
+  listRouting.Add (staticRouting, 0);
+  listRouting.Add (ipv4SRPRoutingHelper, 10);
+
+  internet.SetRoutingHelper (listRouting);
+
   internet.Install (c);
 
   // We create the channels first without any IP addressing information
   NS_LOG_INFO ("Create channels.");
   PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetDeviceAttribute ("DataRate", StringValue ("0.5Mbps"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("200ms"));
   
   //my code----------------------
   //-----------------------------
@@ -201,9 +209,9 @@ main (int argc, char *argv[])
   }*/
 
   //set up Grid-info
-  for(int i=0; i<total; i++){
+  /*for(int i=0; i<total; i++){
       ipv4SRPRoutingHelper.Create(c.Get(i));
-  }
+  }*/
 
   /*map<int, Subnet> smap = ipv4SRPRoutingHelper.getIndexSubnetMap();
   for(map<int, Subnet>::iterator it = smap.begin(); it != smap.end(); ++it){
