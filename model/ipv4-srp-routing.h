@@ -28,6 +28,8 @@
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/random-variable-stream.h"
+//#include "ns3/srp-router-interface.h"
+
 
 #include <iostream>
 using namespace std;
@@ -42,7 +44,7 @@ class Ipv4Header;
 class Ipv4RoutingTableEntry;
 class Ipv4MulticastRoutingTableEntry;
 class Node;
-
+//class SRPRouter;
 
 /**
  * \brief SRP routing protocol for IP version 4 stacks.
@@ -224,10 +226,20 @@ public:
   */
   int64_t AssignStreams (int64_t stream);
 
+  Ptr<Ipv4> getIpv4();
+
+  //Ptr<SRPRouter> getRouter() const;
+  //void setRouter(Ptr<SRPRouter> router);
+  int getID(){return m_id;};
+  void setID(int index){m_id = index;};
+
 protected:
   void DoDispose (void);
 
 private:
+  //Ptr<SRPRouter> m_router;
+
+  int m_id;
   /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
   bool m_randomEcmpRouting;
   /// Set to true if this interface should respond to interface events by globallly recomputing routes 

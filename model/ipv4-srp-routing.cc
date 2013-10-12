@@ -442,6 +442,14 @@ Ipv4SRPRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream) const
     }
 }
 
+/*Ptr<SRPRouter> Ipv4SRPRouting::getRouter() const{
+  return m_router;
+}
+
+void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
+  m_router = router;
+}
+*/
 Ptr<Ipv4Route>
 Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {
@@ -450,6 +458,8 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
+  cout << m_id <<" send a packet\t"<<header.GetSource()<<"\t"<<header.GetDestination()<<endl;
+
   if (header.GetDestination ().IsMulticast ())
     {
       NS_LOG_LOGIC ("Multicast destination-- returning false");
@@ -471,6 +481,10 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
   return rtentry;
 }
 
+Ptr<Ipv4> Ipv4SRPRouting::getIpv4(){
+  return m_ipv4;
+}
+
 bool 
 Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,                             UnicastForwardCallback ucb, MulticastForwardCallback mcb,
                                 LocalDeliverCallback lcb, ErrorCallback ecb)
@@ -479,7 +493,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-
+  cout << m_id <<" receive a packet\t"<<header.GetSource()<<"\t"<<header.GetDestination()<<endl;
   if (header.GetDestination ().IsMulticast ())
     {
       NS_LOG_LOGIC ("Multicast destination-- returning false");
@@ -504,6 +518,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
       for (uint32_t i = 0; i < m_ipv4->GetNAddresses (j); i++)
         {
           Ipv4InterfaceAddress iaddr = m_ipv4->GetAddress (j, i);
+          //cout << iaddr << endl;
           Ipv4Address addr = iaddr.GetLocal ();
           if (addr.IsEqual (header.GetDestination ()))
             {

@@ -754,7 +754,10 @@ public:
  */
   bool WithdrawRoute (Ipv4Address network, Ipv4Mask networkMask);
 
+  int getID(){return m_id;};
+  void setID(int index){m_id = index;};
 private:
+  int m_id;
   virtual ~SRPRouter ();
   void ClearLSAs (void);
 

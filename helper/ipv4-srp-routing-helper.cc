@@ -114,6 +114,8 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   //mSRPGlobalInfo.
   NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
   Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
+  srpRouting->setID(id);
+  srpRouter->setID(id);
   srpRouter->SetRoutingProtocol (srpRouting);
 
   return srpRouting;
