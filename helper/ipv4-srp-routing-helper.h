@@ -29,7 +29,7 @@
 #include "ns3/ipv4-routing-helper.h"
 #include "ns3/subnet.h"
 
-
+#include "ns3/conf-loader.h"
 #include "ns3/ipv4-srp-routing.h"
 #include "ns3/ipv4-list-routing.h"
 
@@ -48,7 +48,7 @@ public:
    * SRP routing tasks.
    */
   Ipv4SRPRoutingHelper ();
-
+  Ipv4SRPRoutingHelper (ConfLoader mconf);
   /**
    * \brief Construct a SRPRoutingHelper from another previously initialized
    * instance (Copy Constructor).
@@ -100,30 +100,7 @@ public:
 
   void CreateSRPGrid(Ptr<Node> node) const;
 
-  void setCoreNum(int num);
-  void setToRNum(int num);
-  void setBorderNum(int num);
-  void setSubnetMask(int mask);
-  void setAddressStart(uint32_t address);
-  int getCoreNum();
-  int getToRNum();
-  int getBorderNum();
-  int getSubnetMask();
-  uint32_t getAddressStart();
-
-
-  map<int, Subnet> getIndexSubnetMap() const;
-  void addItem2IndexSubnetMap(int index, Subnet subnet);
-  
-
 private:
-
-  enum NodeType{
-      CORE = 0,
-      TOR,
-      BORDER,
-  };
-
   /**
    * \internal
    * \brief Assignment operator declared private and not implemented to disallow
@@ -131,13 +108,7 @@ private:
    */
   Ipv4SRPRoutingHelper &operator = (const Ipv4SRPRoutingHelper &o);
 
-  map<int, Subnet> index_subnet_map;
 
-  int m_CoreNum;
-  int m_ToRNum;
-  int m_BorderNum;
-  int m_SubnetMask;
-  uint32_t m_AddressStart;
 
 };
 

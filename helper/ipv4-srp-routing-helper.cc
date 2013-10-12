@@ -25,45 +25,6 @@ NS_LOG_COMPONENT_DEFINE ("SRPRoutingHelper");
 
 namespace ns3 {
 
-void Ipv4SRPRoutingHelper::setCoreNum(int num){
-    m_CoreNum = num;
-}
-void Ipv4SRPRoutingHelper::setToRNum(int num){
-    m_ToRNum = num;
-}
-void Ipv4SRPRoutingHelper::setBorderNum(int num){
-    m_BorderNum = num;
-}
-void Ipv4SRPRoutingHelper::setSubnetMask(int mask){
-    m_SubnetMask = mask;
-}
-void Ipv4SRPRoutingHelper::setAddressStart(uint32_t address){
-    m_AddressStart = address;
-}
-int Ipv4SRPRoutingHelper::getCoreNum(){
-    return m_CoreNum;
-}
-int Ipv4SRPRoutingHelper::getToRNum(){
-    return m_ToRNum;
-}
-int Ipv4SRPRoutingHelper::getBorderNum(){
-    return m_BorderNum;
-}
-int Ipv4SRPRoutingHelper::getSubnetMask(){
-    return m_SubnetMask;
-}
-uint32_t Ipv4SRPRoutingHelper::getAddressStart(){
-    return m_AddressStart;
-}
-
-map<int, Subnet> Ipv4SRPRoutingHelper::getIndexSubnetMap() const{
-  return index_subnet_map;
-}
-
-void Ipv4SRPRoutingHelper::addItem2IndexSubnetMap(int index, Subnet subnet){
-  index_subnet_map[index] = subnet;
-}
-
 Ipv4SRPRoutingHelper::Ipv4SRPRoutingHelper ()
 {
 }
@@ -83,45 +44,35 @@ void Ipv4SRPRoutingHelper::CreateSRPGrid(Ptr<Node> node) const{
   int id = node->GetId();
   NS_LOG_LOGIC ("Adding SRPGrid to node " << id);
   Ptr<SRPGrid> mSRPGrid = CreateObject<SRPGrid> ();
-
-  NodeType type;
-  if( id < m_CoreNum ){
-      type = CORE;
-  }else if( id < m_ToRNum){
-      type = TOR;
-  }else {
-      type = BORDER;
-  }
-
-  if(type == CORE){
-      for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+  if( id < ConfLoader::Instance()->getCoreNum() ){
+      for(int i = ConfLoader::Instance()->getCoreNum(); i< ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i++){
           map<int, int> mmap;
           mmap[i] = 1;
-          SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
+          SRPRoutingEntry entry(ConfLoader::Instance()->getIndexSubnetMap()[i], mmap);
           mSRPGrid->addSRPGridEntry(entry);
       }
       map<int, int> mmap;
-      for(int i = m_CoreNum+m_ToRNum; i<m_CoreNum+m_ToRNum+m_BorderNum; i++){
+      for(int i = ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()+ConfLoader::Instance()->getBorderNum(); i++){
           mmap[i] = 1;
       }
       Subnet subnet(0,0);
       SRPRoutingEntry entry(subnet, mmap);
       entry.setDescription("B_exit");
       mSRPGrid->addSRPGridEntry(entry);
-  }else if(type == TOR){
-      for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+  }else if( id < ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+      for(int i= ConfLoader::Instance()->getCoreNum(); i< ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i++){
          if(i==id){
             continue;
          }
          map<int, int> mmap;
-         for(int j=0; j < m_CoreNum; j++){
+         for(int j=0; j < ConfLoader::Instance()->getCoreNum(); j++){
             mmap[j] = 1;
          }
-         SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
+         SRPRoutingEntry entry(ConfLoader::Instance()->getIndexSubnetMap()[i], mmap);
          mSRPGrid->addSRPGridEntry(entry);
       }
       map<int, int> mmap;
-      for(int j=0; j < m_CoreNum; j++){
+      for(int j=0; j < ConfLoader::Instance()->getCoreNum(); j++){
         mmap[j] = 1;
       }
       Subnet subnet(0,0);
@@ -129,23 +80,22 @@ void Ipv4SRPRoutingHelper::CreateSRPGrid(Ptr<Node> node) const{
       entry.setDescription("B_exit");
       mSRPGrid->addSRPGridEntry(entry);
 
-  }else{ //NodeType.BORDER
-      for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+  }else { //NodeType.BORDER
+      for(int i= ConfLoader::Instance()->getCoreNum(); i< ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i++){
          map<int, int> mmap;
-         for(int j=0; j < m_CoreNum; j++){
+         for(int j=0; j < ConfLoader::Instance()->getCoreNum(); j++){
             mmap[j] = 1;
          }
-         for(int j=m_CoreNum+m_ToRNum; j<m_CoreNum+m_ToRNum+m_BorderNum; j++){
+         for(int j=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); j<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()+ConfLoader::Instance()->getBorderNum(); j++){
             if(j==id){
               continue;
             }
             mmap[j] = 3;
          }
-         SRPRoutingEntry entry(getIndexSubnetMap()[i], mmap);
+         SRPRoutingEntry entry(ConfLoader::Instance()->getIndexSubnetMap()[i], mmap);
          mSRPGrid->addSRPGridEntry(entry);
       }
   }
-
   node->GetObject<SRPRouter>()->SetSRPGrid (mSRPGrid);
 }
 
@@ -153,7 +103,6 @@ Ptr<Ipv4RoutingProtocol>
 Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
 {
   int id = node->GetId();
-
 
   NS_LOG_LOGIC ("Adding SRPRouter interface to node " <<
                 id);

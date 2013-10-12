@@ -68,15 +68,14 @@ main (int argc, char *argv[])
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
+
 //#endif
 
   //my code----------------------
   //-----------------------------
-  //string filename = "/home/engcube/Workspace/epcc/dce/source/ns-3.17/src/srp/grid.conf";
-  //ConfLoader conf(filename);
-  //cout << filename << endl;
+  //string filename = "/home/engcube/Workspace/epcc/dce/source/ns-3.17/src/srp/grid.ConfLoader::Instance()->;
 
-  Ipv4SRPRoutingHelper ipv4SRPRoutingHelper;
 
   int CORE_NUM = 2;
   int TOR_NUM = 4;
@@ -84,18 +83,22 @@ main (int argc, char *argv[])
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
 
-  cout << "Core number:" << CORE_NUM << endl;
-  cout << "ToR number:" << TOR_NUM << endl;
-  cout << "Border number:" << BORDER_NUM << endl;
-  cout << "Netmask number:" << SUBNET_MASK << endl;
+  ConfLoader::Instance()->setCoreNum(CORE_NUM);
+  ConfLoader::Instance()->setToRNum(TOR_NUM);
+  ConfLoader::Instance()->setBorderNum(BORDER_NUM);
+  ConfLoader::Instance()->setSubnetMask(SUBNET_MASK);
+  ConfLoader::Instance()->setAddressStart(ADDRESS_START);
 
-  ipv4SRPRoutingHelper.setCoreNum(CORE_NUM);
-  ipv4SRPRoutingHelper.setToRNum(TOR_NUM);
-  ipv4SRPRoutingHelper.setBorderNum(BORDER_NUM);
-  ipv4SRPRoutingHelper.setSubnetMask(SUBNET_MASK);
-  ipv4SRPRoutingHelper.setAddressStart(ADDRESS_START);
 
-  int total = CORE_NUM+TOR_NUM+BORDER_NUM;
+  cout << "Core number:" << ConfLoader::Instance()->getCoreNum() << endl;
+  cout << "ToR number:" << ConfLoader::Instance()->getToRNum() << endl;
+  cout << "Border number:" << ConfLoader::Instance()->getBorderNum() << endl;
+  cout << "Netmask number:" << ConfLoader::Instance()->getSubnetMask() << endl;
+
+
+  int total = ConfLoader::Instance()->getCoreNum()
+            +ConfLoader::Instance()->getToRNum()
+            +ConfLoader::Instance()->getBorderNum();
   //------------------------------
   //end of my code----------------
 
@@ -114,7 +117,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   // Here, we will explicitly create four nodes.  In more sophisticated
-  // topologies, we could configure a node factory.
+  // topologies, we could Configure a node factory.
   NS_LOG_INFO ("Create nodes.");
   
   //my code----------------------
@@ -123,10 +126,10 @@ main (int argc, char *argv[])
   c.Create (total);
 
   Subnet subnet(ADDRESS_START, SUBNET_MASK);
-  ipv4SRPRoutingHelper.addItem2IndexSubnetMap(CORE_NUM, subnet);
+  ConfLoader::Instance()->addItem2IndexSubnetMap(CORE_NUM, subnet);
   for(int i=CORE_NUM+1; i<CORE_NUM+TOR_NUM; i++){
-      Subnet s = ipv4SRPRoutingHelper.getIndexSubnetMap()[i-1].nextSubnet();
-      ipv4SRPRoutingHelper.addItem2IndexSubnetMap(i, s);
+      Subnet s = ConfLoader::Instance()->getIndexSubnetMap()[i-1].nextSubnet();
+      ConfLoader::Instance()->addItem2IndexSubnetMap(i, s);
   }
 
   list<NodeContainer> nodeContainers;
@@ -155,8 +158,10 @@ main (int argc, char *argv[])
 
   InternetStackHelper internet;
 
-  Ipv4StaticRoutingHelper staticRouting;
   Ipv4ListRoutingHelper listRouting;
+  Ipv4StaticRoutingHelper staticRouting;
+  Ipv4SRPRoutingHelper ipv4SRPRoutingHelper;
+
   listRouting.Add (staticRouting, 0);
   listRouting.Add (ipv4SRPRoutingHelper, 10);
 
@@ -300,6 +305,11 @@ main (int argc, char *argv[])
       flowmon = flowmonHelper.InstallAll ();
     }
 
+  cout << "Grid Table" << endl;
+  for(int i=0; i<total; i++){
+      cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid()->toString() << endl;
+  }
+
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Stop (Seconds (11));
   Simulator::Run ();
@@ -311,5 +321,8 @@ main (int argc, char *argv[])
     }
 
   Simulator::Destroy ();
+
+
+
   return 0;
 }
