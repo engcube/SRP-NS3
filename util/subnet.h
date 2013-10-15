@@ -5,11 +5,13 @@
 #include <string>
 #include <iostream>
 
-//#include "ns3/ipv4-address.h"
+#include "ns3/ipv4-address.h"
 
 using namespace std;
 
 namespace ns3{
+
+class Ipv4Address;
 
 class Subnet
 {
@@ -25,6 +27,7 @@ public:
 	uint32_t getMask() const;
 	string uint32ToAddress(uint32_t x) const;
 	bool equals(Subnet other) const;
+	bool contains(Ipv4Address dest);
 private:
 	uint32_t address;
 	uint32_t mask;

@@ -264,6 +264,8 @@ private:
 
   Ptr<Ipv4Route> LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif = 0);
 
+  Ptr<Ipv4Route> LookupSRPGrid (Ipv4Address dest);
+
   HostRoutes m_hostRoutes;
   NetworkRoutes m_networkRoutes;
   ASExternalRoutes m_ASexternalRoutes; // External routes imported

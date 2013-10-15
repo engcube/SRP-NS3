@@ -68,6 +68,14 @@ Subnet SRPRoutingEntry::getSubnet(){
     return this->mSubnet;
 }
 
+map<int, int> SRPRoutingEntry::getNodeList(){
+    return this->mNodeList;
+}
+
+void SRPRoutingEntry::setNodeList(map<int, int> nodeList){
+    this->mNodeList = nodeList;
+}
+
 SRPGrid::SRPGrid(){
 
 }
@@ -116,6 +124,16 @@ void SRPGrid::removeSRPGridEntry(Subnet subnet){
 
 list<SRPRoutingEntry> SRPGrid::getSRPGrid(){
     return m_entries;
+}
+
+map<int, int> SRPGrid::getNodeListByHost(Ipv4Address dest){
+    for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
+        if(it->getSubnet().contains(dest)){
+            return it->getNodeList();
+        }
+    }
+    map<int,int> emp;
+    return emp;
 }
 
 

@@ -140,10 +140,55 @@ Ptr<SRPGrid> Ipv4SRPRouting::GetSRPGrid (void){
     return this->m_SRPGrid;
 }
 
-/*Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
+Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
-  return null;
-}*/
+  NS_LOG_LOGIC ("Looking for route for destination " << dest);
+  map<int, int> nodeList = m_SRPGrid->getNodeListByHost(dest);
+  //value = 1
+  vector<int> v1_list;
+  //value = 3
+  vector<int> v3_list;
+  for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
+      if(it->second==1){
+          v1_list.push_back(it->first);
+      }else if(it->second==3){
+          v3_list.push_back(it->first);
+      }
+  }
+
+  //routing algorthm: how to choose a path
+  // pick up one of the routes uniformly at random if random
+  // ECMP routing is enabled, or always select the first route
+  // consistently if random ECMP routing is disabled
+
+  int destNode = -1;
+  if(v1_list.size()>0){
+      if (m_randomEcmpRouting){
+          destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
+      }
+      else{
+          destNode = v1_list.front();
+      }
+
+  }else if(v3_list.size()>0){
+      if (m_randomEcmpRouting){
+          destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
+      }
+      else{
+          destNode = v3_list.front();
+      }
+  }
+  cout << destNode << endl;
+  //Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
+  //rtentry->SetDestination (route->GetDest ());
+  // XXX handle multi-address case
+  //rtentry->SetSource (m_ipv4->GetAddress (route->GetInterface (), 0).GetLocal ());
+  //rtentry->SetGateway (route->GetGateway ());
+  //uint32_t interfaceIdx = route->GetInterface ();
+  //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
+  Ptr<Ipv4Route> rtentry = 0;
+  return rtentry;
+}
 
 
 Ptr<Ipv4Route>
@@ -483,7 +528,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // See if this is a unicast packet we have a route for.
 //
   NS_LOG_LOGIC ("Unicast destination- looking up");
-  Ptr<Ipv4Route> rtentry = LookupSRP (header.GetDestination (), oif);
+  Ptr<Ipv4Route> rtentry = LookupSRPGrid (header.GetDestination ());
   if (rtentry)
     {
       sockerr = Socket::ERROR_NOTERROR;
@@ -565,7 +610,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
     }
   // Next, try to find a route
   NS_LOG_LOGIC ("Unicast destination- looking up SRP route");
-  Ptr<Ipv4Route> rtentry = LookupSRP (header.GetDestination ());
+  Ptr<Ipv4Route> rtentry = LookupSRPGrid (header.GetDestination ());
   if (rtentry != 0)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");

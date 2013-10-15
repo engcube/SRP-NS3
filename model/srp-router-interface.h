@@ -48,6 +48,7 @@ class SRPRoutingEntry;
 class SRPGrid;
 class SRPRouter;
 class Ipv4SRPRouting;
+class Ipv4Address;
 
 class SRPRoutingEntry{
 public:
@@ -58,6 +59,8 @@ public:
     Subnet getSubnet();
     string getDescription();
     void setDescription(string desc);
+    map<int, int> getNodeList();
+    void setNodeList(map<int, int> mNodeList); 
     string toString();
 private:
     Subnet mSubnet;
@@ -80,6 +83,7 @@ public:
     list<SRPRoutingEntry> getSRPGrid();
     void setType(GridType type);
     string toString();
+    map<int, int> getNodeListByHost(Ipv4Address dest);
 private:
     GridType m_type;
     list<SRPRoutingEntry> m_entries;

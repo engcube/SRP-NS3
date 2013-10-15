@@ -80,4 +80,8 @@ bool Subnet::equals(Subnet other) const{
 	return false;
 }
 
+bool Subnet::contains(Ipv4Address dest){
+	return this->address == (this->mask & dest.Get());
+}
+
 }
