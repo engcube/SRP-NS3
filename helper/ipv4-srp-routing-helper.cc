@@ -96,7 +96,8 @@ void Ipv4SRPRoutingHelper::CreateSRPGrid(Ptr<Node> node) const{
          mSRPGrid->addSRPGridEntry(entry);
       }
   }
-  node->GetObject<SRPRouter>()->SetSRPGrid (mSRPGrid);
+  //NS_LOG_LOGIC ("Adding Grid to "+ mSRPGrid->toString() + " Node "+ node);
+  node->GetObject<SRPRouter>()->GetRoutingProtocol()->SetSRPGrid (mSRPGrid);
 }
 
 Ptr<Ipv4RoutingProtocol>
@@ -109,14 +110,14 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   Ptr<SRPRouter> srpRouter = CreateObject<SRPRouter> ();
   node->AggregateObject (srpRouter);
   
-  CreateSRPGrid(node);
-  
   //mSRPGlobalInfo.
   NS_LOG_LOGIC ("Adding SRPRouting Protocol to node " << id);
   Ptr<Ipv4SRPRouting> srpRouting = CreateObject<Ipv4SRPRouting> ();
   srpRouting->setID(id);
   srpRouter->setID(id);
   srpRouter->SetRoutingProtocol (srpRouting);
+
+  CreateSRPGrid(node);
 
   return srpRouting;
 }

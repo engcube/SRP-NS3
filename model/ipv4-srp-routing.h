@@ -28,7 +28,7 @@
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/random-variable-stream.h"
-//#include "ns3/srp-router-interface.h"
+#include "ns3/srp-router-interface.h"
 
 
 #include <iostream>
@@ -44,6 +44,7 @@ class Ipv4Header;
 class Ipv4RoutingTableEntry;
 class Ipv4MulticastRoutingTableEntry;
 class Node;
+class SRPGrid;
 //class SRPRouter;
 
 /**
@@ -233,11 +234,15 @@ public:
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
 
+  void SetSRPGrid(Ptr<SRPGrid> grid);
+  Ptr<SRPGrid> GetSRPGrid (void);
+
 protected:
   void DoDispose (void);
 
 private:
   //Ptr<SRPRouter> m_router;
+  Ptr<SRPGrid> m_SRPGrid;
 
   int m_id;
   /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently

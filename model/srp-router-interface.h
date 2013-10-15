@@ -637,8 +637,6 @@ public:
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);
 
-  void SetSRPGrid(Ptr<SRPGrid> grid);
-  Ptr<SRPGrid> GetSRPGrid (void);
 /**
  * @brief Get the Router ID associated with this SRP Router.
  *
@@ -779,8 +777,6 @@ private:
 
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;
-
-  Ptr<SRPGrid> m_SRPGrid;
 
   typedef std::list<Ipv4RoutingTableEntry *> InjectedRoutes;
   typedef std::list<Ipv4RoutingTableEntry *>::const_iterator InjectedRoutesCI;

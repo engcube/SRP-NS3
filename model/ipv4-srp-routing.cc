@@ -132,6 +132,19 @@ Ipv4SRPRouting::AddASExternalRouteTo (Ipv4Address network,
   m_ASexternalRoutes.push_back (route);
 }
 
+void Ipv4SRPRouting::SetSRPGrid(Ptr<SRPGrid> grid){
+    this->m_SRPGrid = grid;
+}
+
+Ptr<SRPGrid> Ipv4SRPRouting::GetSRPGrid (void){
+    return this->m_SRPGrid;
+}
+
+/*Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
+{
+  return null;
+}*/
+
 
 Ptr<Ipv4Route>
 Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
@@ -242,6 +255,7 @@ Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
       return 0;
     }
 }
+
 
 uint32_t 
 Ipv4SRPRouting::GetNRoutes (void) const

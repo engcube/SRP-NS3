@@ -47,17 +47,10 @@ TypeId SRPGrid::GetTypeId (void)
   return tid;
 }
 
-void SRPRouter::SetSRPGrid(Ptr<SRPGrid> grid){
-    this->m_SRPGrid = grid;
-}
-
-Ptr<SRPGrid> SRPRouter::GetSRPGrid (void){
-    return this->m_SRPGrid;
-}
-
 SRPRoutingEntry::SRPRoutingEntry(){
 
 }
+
 SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, map<int, int> nodeList){
     this->mSubnet = subnet;
     this->mNodeList = nodeList;
