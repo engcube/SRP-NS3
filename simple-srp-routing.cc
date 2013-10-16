@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 //#if 0 
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
-  //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
 
 //#endif
@@ -125,6 +125,8 @@ main (int argc, char *argv[])
   NodeContainer c;
   c.Create (total);
 
+  ConfLoader::Instance()->setNodeContainer(c);
+
   Subnet subnet(ADDRESS_START, SUBNET_MASK);
   ConfLoader::Instance()->addItem2IndexSubnetMap(CORE_NUM, subnet);
   for(int i=CORE_NUM+1; i<CORE_NUM+TOR_NUM; i++){
@@ -155,18 +157,15 @@ main (int argc, char *argv[])
   //NodeContainer n0n2 = NodeContainer (c.Get (0), c.Get (2));
   //NodeContainer n1n2 = NodeContainer (c.Get (1), c.Get (2));
   //NodeContainer n3n2 = NodeContainer (c.Get (3), c.Get (2));
-
   InternetStackHelper internet;
 
   Ipv4ListRoutingHelper listRouting;
   Ipv4StaticRoutingHelper staticRouting;
   Ipv4SRPRoutingHelper ipv4SRPRoutingHelper;
-
   listRouting.Add (staticRouting, 0);
   listRouting.Add (ipv4SRPRoutingHelper, 10);
 
   internet.SetRoutingHelper (listRouting);
-
   internet.Install (c);
 
   // We create the channels first without any IP addressing information
@@ -250,13 +249,15 @@ main (int argc, char *argv[])
   
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
+                     //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
+                     Address (InetSocketAddress ("10.0.1.2", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
+  //source: the first ToR node
   ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM));
 
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (5.0));
+  apps.Stop (Seconds (1.01));
   
   // Create a packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -265,7 +266,7 @@ main (int argc, char *argv[])
     apps = sink.Install (c.Get (i));
   }
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (5.0));
+  apps.Stop (Seconds (1.01));
 
   //OnOffHelper onoff ("ns3::UdpSocketFactory", 
   //                   Address (InetSocketAddress (i3i2.GetAddress (0), port)));
@@ -305,11 +306,22 @@ main (int argc, char *argv[])
       flowmon = flowmonHelper.InstallAll ();
     }
 
-  cout << "Grid Table" << endl;
   for(int i=0; i<total; i++){
-      cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid()->toString() << endl;
+      cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
   }
-
+  /*for(int i=0; i<total; i++){
+      cout << i << endl;
+     Ptr<Ipv4> m_ipv4 = c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
+      for (uint32_t m = 0; m < m_ipv4->GetNInterfaces (); m++)
+      {
+      for (uint32_t n = 0; n < m_ipv4->GetNAddresses (m); n++)
+        {
+          Ipv4InterfaceAddress iaddr = m_ipv4->GetAddress (m, n);
+          cout << m<<" "<<n<<" "<<iaddr << endl;
+        }
+      }
+      cout << endl;
+  }*/
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Stop (Seconds (11));
   Simulator::Run ();

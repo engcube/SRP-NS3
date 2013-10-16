@@ -29,7 +29,7 @@
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/srp-router-interface.h"
-
+#include "ns3/conf-loader.h"
 
 #include <iostream>
 using namespace std;
@@ -262,7 +262,7 @@ private:
   typedef std::list<Ipv4RoutingTableEntry *>::const_iterator ASExternalRoutesCI;
   typedef std::list<Ipv4RoutingTableEntry *>::iterator ASExternalRoutesI;
 
-  Ptr<Ipv4Route> LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif = 0);
+  //Ptr<Ipv4Route> LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif = 0);
 
   Ptr<Ipv4Route> LookupSRPGrid (Ipv4Address dest);
 

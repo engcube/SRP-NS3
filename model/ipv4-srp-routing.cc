@@ -177,20 +177,27 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
       else{
           destNode = v3_list.front();
       }
+  }else{
+      return 0;
   }
-  cout << destNode << endl;
-  //Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
-  //rtentry->SetDestination (route->GetDest ());
+  int index_of_interface = 1;
+
+  Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
+
+  Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
+  rtentry->SetDestination (to_ipv4->GetAddress (index_of_interface, 0).GetLocal ());
   // XXX handle multi-address case
-  //rtentry->SetSource (m_ipv4->GetAddress (route->GetInterface (), 0).GetLocal ());
-  //rtentry->SetGateway (route->GetGateway ());
+  rtentry->SetSource (m_ipv4->GetAddress (index_of_interface, 0).GetLocal ());
+  rtentry->SetGateway (Ipv4Address("192.168.255.254"));
   //uint32_t interfaceIdx = route->GetInterface ();
   //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
-  Ptr<Ipv4Route> rtentry = 0;
+  rtentry->SetOutputDevice (m_ipv4->GetNetDevice (index_of_interface));
+
+  //Ptr<Ipv4Route> rtentry = 0;
   return rtentry;
 }
 
-
+/*
 Ptr<Ipv4Route>
 Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
 {
@@ -300,7 +307,7 @@ Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
       return 0;
     }
 }
-
+*/
 
 uint32_t 
 Ipv4SRPRouting::GetNRoutes (void) const
@@ -509,6 +516,7 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
   m_router = router;
 }
 */
+
 Ptr<Ipv4Route>
 Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {

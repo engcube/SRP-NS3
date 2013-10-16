@@ -60,5 +60,12 @@ void ConfLoader::addItem2IndexSubnetMap(int index, Subnet subnet){
   index_subnet_map[index] = subnet;
 }
 
+void ConfLoader::setNodeContainer(NodeContainer nc){
+    m_nodes = nc;
+}
+
+NodeContainer ConfLoader::getNodeContainer(){
+    return m_nodes;
+}
 
 }

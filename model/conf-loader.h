@@ -6,10 +6,13 @@
 #include <stdint.h>
 #include <map>
 
+#include "ns3/node-container.h"
 #include "ns3/subnet.h"
 using namespace std;
 
 namespace ns3{
+
+class NodeContainer;
 
 class ConfLoader
 {
@@ -30,6 +33,8 @@ public:
   map<int, Subnet> getIndexSubnetMap() const;
   void addItem2IndexSubnetMap(int index, Subnet subnet);
 
+  void setNodeContainer(NodeContainer nc);
+  NodeContainer getNodeContainer();
 private:
 	ConfLoader(){};
 	ConfLoader(ConfLoader const&){};
@@ -50,6 +55,7 @@ private:
   int m_SubnetMask;
   uint32_t m_AddressStart;
 
+  NodeContainer m_nodes;
 };
 
 }
