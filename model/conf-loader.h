@@ -27,6 +27,8 @@ public:
   int getToRNum() const;
   int getBorderNum() const;
   int getSubnetMask() const;
+  int getTotalNum() const;
+
   uint32_t getAddressStart() const;
 
 
@@ -35,6 +37,7 @@ public:
 
   void setNodeContainer(NodeContainer nc);
   NodeContainer getNodeContainer();
+  int getInterfaceIndex(int my, int to);
 private:
 	ConfLoader(){};
 	ConfLoader(ConfLoader const&){};

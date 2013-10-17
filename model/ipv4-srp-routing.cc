@@ -140,63 +140,6 @@ Ptr<SRPGrid> Ipv4SRPRouting::GetSRPGrid (void){
     return this->m_SRPGrid;
 }
 
-Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
-{
-  NS_LOG_LOGIC ("Looking for route for destination " << dest);
-  map<int, int> nodeList = m_SRPGrid->getNodeListByHost(dest);
-  //value = 1
-  vector<int> v1_list;
-  //value = 3
-  vector<int> v3_list;
-  for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
-      if(it->second==1){
-          v1_list.push_back(it->first);
-      }else if(it->second==3){
-          v3_list.push_back(it->first);
-      }
-  }
-
-  //routing algorthm: how to choose a path
-  // pick up one of the routes uniformly at random if random
-  // ECMP routing is enabled, or always select the first route
-  // consistently if random ECMP routing is disabled
-
-  int destNode = -1;
-  if(v1_list.size()>0){
-      if (m_randomEcmpRouting){
-          destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
-      }
-      else{
-          destNode = v1_list.front();
-      }
-
-  }else if(v3_list.size()>0){
-      if (m_randomEcmpRouting){
-          destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
-      }
-      else{
-          destNode = v3_list.front();
-      }
-  }else{
-      return 0;
-  }
-  int index_of_interface = 1;
-
-  Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
-
-  Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
-  rtentry->SetDestination (to_ipv4->GetAddress (index_of_interface, 0).GetLocal ());
-  // XXX handle multi-address case
-  rtentry->SetSource (m_ipv4->GetAddress (index_of_interface, 0).GetLocal ());
-  rtentry->SetGateway (Ipv4Address("192.168.255.254"));
-  //uint32_t interfaceIdx = route->GetInterface ();
-  //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
-  rtentry->SetOutputDevice (m_ipv4->GetNetDevice (index_of_interface));
-
-  //Ptr<Ipv4Route> rtentry = 0;
-  return rtentry;
-}
-
 /*
 Ptr<Ipv4Route>
 Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
@@ -517,6 +460,70 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 }
 */
 
+Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
+{
+  NS_LOG_LOGIC ("Looking for route for destination " << dest);
+  map<int, int> nodeList = m_SRPGrid->getNodeListByHost(dest);
+  //value = 1
+  vector<int> v1_list;
+  //value = 3
+  vector<int> v3_list;
+  for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
+      if(it->second==1){
+          v1_list.push_back(it->first);
+      }else if(it->second==3){
+          v3_list.push_back(it->first);
+      }
+  }
+
+  //routing algorthm: how to choose a path
+  // pick up one of the routes uniformly at random if random
+  // ECMP routing is enabled, or always select the first route
+  // consistently if random ECMP routing is disabled
+
+  int destNode = -1;
+  if(v1_list.size()>0){
+      if (m_randomEcmpRouting){
+          destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
+      }
+      else{
+          destNode = v1_list.front();
+      }
+
+  }else if(v3_list.size()>0){
+      if (m_randomEcmpRouting){
+          destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
+      }
+      else{
+          destNode = v3_list.front();
+      }
+  }else{
+      return 0;
+  }
+
+  NS_LOG_LOGIC ("Route Found to Node " << destNode);
+  int to_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(destNode, m_id);
+  int my_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(m_id, destNode);
+
+  cout << "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface << endl;
+
+  Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
+
+  Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
+  rtentry->SetDestination (to_ipv4->GetAddress (to_index_of_interface, 0).GetLocal ());
+
+  // XXX handle multi-address case
+  rtentry->SetSource (m_ipv4->GetAddress (my_index_of_interface, 0).GetLocal ());
+
+  rtentry->SetGateway (Ipv4Address("0.0.0.0"));
+  //uint32_t interfaceIdx = route->GetInterface ();
+  //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
+  rtentry->SetOutputDevice (m_ipv4->GetNetDevice (my_index_of_interface));
+  //Ptr<Ipv4Route> rtentry = 0;
+  return rtentry;
+}
+
+
 Ptr<Ipv4Route>
 Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {
@@ -525,7 +532,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
-  cout << m_id <<" send a packet\t"<<header.GetSource()<<"\t"<<header.GetDestination()<<endl;
+  cout << m_id <<" send a packet\t"<<endl;
 
   if (header.GetDestination ().IsMulticast ())
     {
@@ -553,14 +560,15 @@ Ptr<Ipv4> Ipv4SRPRouting::getIpv4(){
 }
 
 bool 
-Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,                             UnicastForwardCallback ucb, MulticastForwardCallback mcb,
+Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,                             
+                UnicastForwardCallback ucb, MulticastForwardCallback mcb,
                                 LocalDeliverCallback lcb, ErrorCallback ecb)
 { 
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev << &lcb << &ecb);
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-  cout << m_id <<" receive a packet\t"<<header.GetSource()<<"\t"<<header.GetDestination()<<endl;
+  cout << m_id <<" receive a packet\t"<<endl;
   if (header.GetDestination ().IsMulticast ())
     {
       NS_LOG_LOGIC ("Multicast destination-- returning false");
@@ -574,41 +582,13 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
       // TODO:  Forward broadcast
     }
 
-  // TODO:  Configurable option to enable RFC 1222 Strong End System Model
-  // Right now, we will be permissive and allow a source to send us
-  // a packet to one of our other interface addresses; that is, the
-  // destination unicast address does not match one of the iif addresses,
-  // but we check our other interfaces.  This could be an option
-  // (to remove the outer loop immediately below and just check iif).
-  for (uint32_t j = 0; j < m_ipv4->GetNInterfaces (); j++)
-    {
-      for (uint32_t i = 0; i < m_ipv4->GetNAddresses (j); i++)
-        {
-          Ipv4InterfaceAddress iaddr = m_ipv4->GetAddress (j, i);
-          //cout << iaddr << endl;
-          Ipv4Address addr = iaddr.GetLocal ();
-          if (addr.IsEqual (header.GetDestination ()))
-            {
-              if (j == iif)
-                {
-                  NS_LOG_LOGIC ("For me (destination " << addr << " match)");
-                }
-              else
-                {
-                  NS_LOG_LOGIC ("For me (destination " << addr << " match) on another interface " << header.GetDestination ());
-                }
-              lcb (p, header, iif);
-              return true;
-            }
-          if (header.GetDestination ().IsEqual (iaddr.GetBroadcast ()))
-            {
-              NS_LOG_LOGIC ("For me (interface broadcast address)");
-              lcb (p, header, iif);
-              return true;
-            }
-          NS_LOG_LOGIC ("Address "<< addr << " not a match");
-        }
-    }
+  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination())){
+      NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
+      cout << "Destination match" << endl;
+      lcb (p, header, iif);
+      return true;
+  }
+
   // Check if input device supports IP forwarding
   if (m_ipv4->IsForwarding (iif) == false)
     {
@@ -617,11 +597,13 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
       return false;
     }
   // Next, try to find a route
-  NS_LOG_LOGIC ("Unicast destination- looking up SRP route");
+  NS_LOG_LOGIC ("Unicast destination- looking up SRP Grid");
   Ptr<Ipv4Route> rtentry = LookupSRPGrid (header.GetDestination ());
+
   if (rtentry != 0)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
+
       ucb (rtentry, p, header);
       return true;
     }

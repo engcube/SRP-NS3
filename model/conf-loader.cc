@@ -52,6 +52,11 @@ uint32_t ConfLoader::getAddressStart() const{
     return m_AddressStart;
 }
 
+int ConfLoader::getTotalNum() const{
+    return m_CoreNum+m_ToRNum+m_BorderNum;
+}
+
+
 map<int, Subnet> ConfLoader::getIndexSubnetMap() const{
   return index_subnet_map;
 }
@@ -66,6 +71,23 @@ void ConfLoader::setNodeContainer(NodeContainer nc){
 
 NodeContainer ConfLoader::getNodeContainer(){
     return m_nodes;
+}
+
+int ConfLoader::getInterfaceIndex(int my, int to){
+    if(my<m_CoreNum){
+        if(to<m_CoreNum){
+            return 0;
+        }else{
+            return to-m_CoreNum+1;
+        }
+    }else{
+        if(to>=m_CoreNum){
+            return 0;
+        }else{
+            return to+1;
+        }
+    }
+    return 0;
 }
 
 }
