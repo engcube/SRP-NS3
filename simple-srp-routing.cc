@@ -64,20 +64,14 @@ main (int argc, char *argv[])
 {
   // Users may find it convenient to turn on explicit debugging
   // for selected modules; the below lines suggest how to do this
-//#if 0 
+#if 1
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
-  LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
-  LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
-
+  //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
+  //LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
   //LogComponentEnable ("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
-//#endif
-
-  //my code----------------------
-  //-----------------------------
-  //string filename = "/home/engcube/Workspace/epcc/dce/source/ns-3.17/src/srp/grid.ConfLoader::Instance()->;
-
+#endif
 
   int CORE_NUM = 2;
   int TOR_NUM = 4;
@@ -91,19 +85,10 @@ main (int argc, char *argv[])
   ConfLoader::Instance()->setSubnetMask(SUBNET_MASK);
   ConfLoader::Instance()->setAddressStart(ADDRESS_START);
 
-
   cout << "Core number:" << ConfLoader::Instance()->getCoreNum() << endl;
   cout << "ToR number:" << ConfLoader::Instance()->getToRNum() << endl;
   cout << "Border number:" << ConfLoader::Instance()->getBorderNum() << endl;
   cout << "Netmask number:" << ConfLoader::Instance()->getSubnetMask() << endl;
-
-
-  int total = ConfLoader::Instance()->getCoreNum()
-            +ConfLoader::Instance()->getToRNum()
-            +ConfLoader::Instance()->getBorderNum();
-  //------------------------------
-  //end of my code----------------
-
 
   // Set up some default values for the simulation.  Use the 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (210));
@@ -122,10 +107,9 @@ main (int argc, char *argv[])
   // topologies, we could Configure a node factory.
   NS_LOG_INFO ("Create nodes.");
   
-  //my code----------------------
-  //-----------------------------
+
   NodeContainer c;
-  c.Create (total);
+  c.Create (ConfLoader::Instance()->getTotalNum());
 
   ConfLoader::Instance()->setNodeContainer(c);
 
@@ -146,19 +130,12 @@ main (int argc, char *argv[])
   }
 
   for(int i=0; i<CORE_NUM; i++){
-      for(int j=CORE_NUM+TOR_NUM; j<total; j++){
+      for(int j=CORE_NUM+TOR_NUM; j<ConfLoader::Instance()->getTotalNum(); j++){
           NodeContainer ninj = NodeContainer (c.Get(i), c.Get(j));
           nodeContainers.push_back(ninj);
       }
   }
-  //------------------------------
-  //end of my code----------------
 
-  //NodeContainer c;
-  //c.Create (4);
-  //NodeContainer n0n2 = NodeContainer (c.Get (0), c.Get (2));
-  //NodeContainer n1n2 = NodeContainer (c.Get (1), c.Get (2));
-  //NodeContainer n3n2 = NodeContainer (c.Get (3), c.Get (2));
   InternetStackHelper internet;
 
   Ipv4ListRoutingHelper listRouting;
@@ -176,31 +153,15 @@ main (int argc, char *argv[])
   p2p.SetDeviceAttribute ("DataRate", StringValue ("0.5Mbps"));
   p2p.SetChannelAttribute ("Delay", StringValue ("200ms"));
   
-  //my code----------------------
-  //-----------------------------
   list<NetDeviceContainer> netDeviceContainers;
   for(list<NodeContainer>::iterator it= nodeContainers.begin(); it!=nodeContainers.end(); ++it){
       NetDeviceContainer didj = p2p.Install (*it);
       netDeviceContainers.push_back(didj);
   }
-  //------------------------------
-  //end of my code----------------
 
-
-  //NetDeviceContainer d0d2 = p2p.Install (n0n2);
-
-  //NetDeviceContainer d1d2 = p2p.Install (n1n2);
-
-  //p2p.SetDeviceAttribute ("DataRate", StringValue ("1500kbps"));
-  //p2p.SetChannelAttribute ("Delay", StringValue ("10ms"));
-  //NetDeviceContainer d3d2 = p2p.Install (n3n2);
-
-  // Later, we add IP addresses.
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
   
-  //my code----------------------
-  //-----------------------------
   ipv4.SetBase("192.168.0.0","255.255.0.0");
 
   list<Ipv4InterfaceContainer> ipv4InterfaceContainers;
@@ -209,50 +170,12 @@ main (int argc, char *argv[])
       ipv4InterfaceContainers.push_back(ii);
   }
   
-  /*for(list<Ipv4InterfaceContainer>::iterator it= ipv4InterfaceContainers.begin(); it!=ipv4InterfaceContainers.end(); ++it){
-      cout << it->GetAddress(0) << endl;
-      cout << it->GetAddress(1) << endl;
-  }*/
-
-  //set up Grid-info
-  /*for(int i=0; i<total; i++){
-      ipv4SRPRoutingHelper.Create(c.Get(i));
-  }*/
-
-  /*map<int, Subnet> smap = ipv4SRPRoutingHelper.getIndexSubnetMap();
-  for(map<int, Subnet>::iterator it = smap.begin(); it != smap.end(); ++it){
-      cout << it->first <<"   "<<it->second.toString()<<endl;
-  }
-  for(int i=0; i<total; i++){
-      //cout << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid() << endl;
-      cout << c.Get(i)->GetObject<SRPRouter>()->GetSRPGrid()->toString() << endl;
-  }*/
-
-  //------------------------------
-  //end of my code----------------
-
-
-  //ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  //Ipv4InterfaceContainer i0i2 = ipv4.Assign (d0d2);
-
-  //ipv4.SetBase ("10.1.2.0", "255.255.255.0");
-  //Ipv4InterfaceContainer i1i2 = ipv4.Assign (d1d2);
-
-  //ipv4.SetBase ("10.1.3.0", "255.255.255.0");
-  //Ipv4InterfaceContainer i3i2 = ipv4.Assign (d3d2);
-
-  // Create router nodes, initialize routing database and set up the routing
-  // tables in the nodes.
-  //ipv4SRPRoutingHelper.PopulateRoutingTables ();
-
-  // Create the OnOff application to send UDP datagrams of size
-  // 210 bytes at a rate of 448 Kb/s
   NS_LOG_INFO ("Create Applications.");
   
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                     Address (InetSocketAddress ("10.0.2.2", port)));
+                     Address (InetSocketAddress ("10.0.3.2", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node
@@ -270,32 +193,6 @@ main (int argc, char *argv[])
   apps.Start (Seconds (1.0));
   apps.Stop (Seconds (1.01));
 
-  //OnOffHelper onoff ("ns3::UdpSocketFactory", 
-  //                   Address (InetSocketAddress (i3i2.GetAddress (0), port)));
-  //onoff.SetConstantRate (DataRate ("448kb/s"));
-  //ApplicationContainer apps = onoff.Install (c.Get (0));
-  //apps.Start (Seconds (1.0));
-  //apps.Stop (Seconds (10.0));
-
-  // Create a packet sink to receive these packets
-  //PacketSinkHelper sink ("ns3::UdpSocketFactory",
-  //                       Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
-  //apps = sink.Install (c.Get (3));
-  //apps.Start (Seconds (1.0));
-  //apps.Stop (Seconds (10.0));
-
-  // Create a similar flow from n3 to n1, starting at time 1.1 seconds
-  //onoff.SetAttribute ("Remote", 
-  //                    AddressValue (InetSocketAddress (i1i2.GetAddress (0), port)));
-  //apps = onoff.Install (c.Get (3));
-  //apps.Start (Seconds (1.1));
-  //apps.Stop (Seconds (10.0));
-
-  // Create a packet sink to receive these packets
-  //apps = sink.Install (c.Get (1));
-  //apps.Start (Seconds (1.1));
-  //apps.Stop (Seconds (10.0));
-
   AsciiTraceHelper ascii;
   p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
   p2p.EnablePcapAll ("simple-SRP-routing");
@@ -308,22 +205,10 @@ main (int argc, char *argv[])
       flowmon = flowmonHelper.InstallAll ();
     }
 
-  for(int i=0; i<total; i++){
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
       cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
   }
-  /*for(int i=0; i<total; i++){
-      cout << i << endl;
-     Ptr<Ipv4> m_ipv4 = c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
-      for (uint32_t m = 0; m < m_ipv4->GetNInterfaces (); m++)
-      {
-      for (uint32_t n = 0; n < m_ipv4->GetNAddresses (m); n++)
-        {
-          Ipv4InterfaceAddress iaddr = m_ipv4->GetAddress (m, n);
-          cout << m<<" "<<n<<" "<<iaddr << endl;
-        }
-      }
-      cout << endl;
-  }*/
+
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Stop (Seconds (11));
   Simulator::Run ();
