@@ -90,4 +90,45 @@ int ConfLoader::getInterfaceIndex(int my, int to){
     return 0;
 }
 
+map<int, bool> ConfLoader::getNodeStates(){
+    return this->nodeStates;
+}
+
+void ConfLoader::setNodeStates(map<int, bool> states){
+    this->nodeStates = states;
+}
+
+map<pair<int,int>,bool> ConfLoader::getLinkStates(){
+    return this->linkStates;
+}
+
+void ConfLoader::setLinkStates(map<pair<int,int>,bool> states){
+    this->linkStates = states;
+}
+
+map<int, bool> ConfLoader::getNodeActions(){
+    return this->nodeActions;
+}
+
+void ConfLoader::setNodeActions(map<int, bool> actions){
+    this->nodeActions = actions;
+}
+
+map<pair<int,int>,bool> ConfLoader::getLinkActions(){
+    return this->linkActions;
+}
+
+void ConfLoader::setLinkActions(map<pair<int,int>,bool> actions){
+    this->linkActions = actions;
+}
+
+void ConfLoader::clearNodeActions(){
+    this->nodeActions.clear();
+}
+
+void ConfLoader::clearLinkActions(){
+    this->linkActions.clear();
+}
+
+
 }

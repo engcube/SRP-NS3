@@ -38,6 +38,23 @@ public:
   void setNodeContainer(NodeContainer nc);
   NodeContainer getNodeContainer();
   int getInterfaceIndex(int my, int to);
+
+  map<int, bool> getNodeStates();
+  void setNodeStates(map<int, bool> states);
+
+  map<pair<int,int>,bool> getLinkStates();
+  void setLinkStates(map<pair<int,int>,bool> states);
+
+
+  map<int, bool> getNodeActions();
+  void setNodeActions(map<int, bool> actions);
+
+  map<pair<int,int>,bool> getLinkActions();
+  void setLinkActions(map<pair<int,int>,bool> actions);
+
+  void clearNodeActions();
+  void clearLinkActions();
+
 private:
 	ConfLoader(){};
 	ConfLoader(ConfLoader const&){};
@@ -51,6 +68,12 @@ private:
   };
 
   map<int, Subnet> index_subnet_map;
+
+  map<int, bool> nodeStates;
+  map<pair<int,int>,bool> linkStates;
+
+  map<int, bool> nodeActions;
+  map<pair<int,int>,bool> linkActions;
 
   int m_CoreNum;
   int m_ToRNum;

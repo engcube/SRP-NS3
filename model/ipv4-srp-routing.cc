@@ -158,6 +158,15 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
   rtentry->SetOutputDevice (m_ipv4->GetNetDevice (my_index_of_interface));
   //Ptr<Ipv4Route> rtentry = 0;
+
+  Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(3), TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  m_socket->Bind ();
+  m_socket->ShutdownRecv ();
+  m_socket->Connect (ConfLoader::Instance()->getNodeContainer().Get(4)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4()->GetAddress (to_index_of_interface, 0).GetLocal ());
+  Ptr<Packet> p = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello"), 5);
+  m_socket->Send (p);
+  cout << "Send a packet" << endl;
+
   return rtentry;
 }
 
@@ -170,7 +179,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
-  cout << m_id <<" send a packet\t"<<endl;
+  cout << m_id <<" send a packet\t"<<header.GetSource() << "\t"<<header.GetDestination()<<endl;
 
   if (header.GetDestination ().IsMulticast ())
     {
@@ -206,7 +215,8 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-  cout << m_id <<" receive a packet\t"<<endl;
+  cout << m_id <<" receive a packet\t"<<header.GetSource() << "\t"<<header.GetDestination()<<endl;
+
   if (header.GetDestination ().IsMulticast ())
     {
       NS_LOG_LOGIC ("Multicast destination-- returning false");

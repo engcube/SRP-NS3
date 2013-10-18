@@ -128,7 +128,6 @@ public:
  */
   Ipv4Address GetRouterId (void) const;
 
-
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
 private:
