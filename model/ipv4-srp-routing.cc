@@ -28,7 +28,6 @@
 #include "ns3/ipv4-routing-table-entry.h"
 #include "ns3/boolean.h"
 #include "ipv4-srp-routing.h"
-#include "srp-route-manager.h"
 
 NS_LOG_COMPONENT_DEFINE ("Ipv4SRPRouting");
 
@@ -68,70 +67,6 @@ Ipv4SRPRouting::~Ipv4SRPRouting ()
   NS_LOG_FUNCTION (this);
 }
 
-void 
-Ipv4SRPRouting::AddHostRouteTo (Ipv4Address dest, 
-                                   Ipv4Address nextHop, 
-                                   uint32_t interface)
-{
-  NS_LOG_FUNCTION (this << dest << nextHop << interface);
-  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
-  *route = Ipv4RoutingTableEntry::CreateHostRouteTo (dest, nextHop, interface);
-  m_hostRoutes.push_back (route);
-}
-
-void 
-Ipv4SRPRouting::AddHostRouteTo (Ipv4Address dest, 
-                                   uint32_t interface)
-{
-  NS_LOG_FUNCTION (this << dest << interface);
-  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
-  *route = Ipv4RoutingTableEntry::CreateHostRouteTo (dest, interface);
-  m_hostRoutes.push_back (route);
-}
-
-void 
-Ipv4SRPRouting::AddNetworkRouteTo (Ipv4Address network, 
-                                      Ipv4Mask networkMask, 
-                                      Ipv4Address nextHop, 
-                                      uint32_t interface)
-{
-  NS_LOG_FUNCTION (this << network << networkMask << nextHop << interface);
-  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
-  *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
-                                                        networkMask,
-                                                        nextHop,
-                                                        interface);
-  m_networkRoutes.push_back (route);
-}
-
-void 
-Ipv4SRPRouting::AddNetworkRouteTo (Ipv4Address network, 
-                                      Ipv4Mask networkMask, 
-                                      uint32_t interface)
-{
-  NS_LOG_FUNCTION (this << network << networkMask << interface);
-  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
-  *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
-                                                        networkMask,
-                                                        interface);
-  m_networkRoutes.push_back (route);
-}
-
-void 
-Ipv4SRPRouting::AddASExternalRouteTo (Ipv4Address network, 
-                                         Ipv4Mask networkMask,
-                                         Ipv4Address nextHop,
-                                         uint32_t interface)
-{
-  NS_LOG_FUNCTION (this << network << networkMask << nextHop << interface);
-  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
-  *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
-                                                        networkMask,
-                                                        nextHop,
-                                                        interface);
-  m_ASexternalRoutes.push_back (route);
-}
-
 void Ipv4SRPRouting::SetSRPGrid(Ptr<SRPGrid> grid){
     this->m_SRPGrid = grid;
 }
@@ -140,266 +75,10 @@ Ptr<SRPGrid> Ipv4SRPRouting::GetSRPGrid (void){
     return this->m_SRPGrid;
 }
 
-/*
-Ptr<Ipv4Route>
-Ipv4SRPRouting::LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif)
-{
-  NS_LOG_FUNCTION (this << dest << oif);
-  NS_LOG_LOGIC ("Looking for route for destination " << dest);
-
-  Ptr<Ipv4Route> rtentry = 0;
-  // store all available routes that bring packets to their destination
-  typedef std::vector<Ipv4RoutingTableEntry*> RouteVec_t;
-  RouteVec_t allRoutes;
-
-  NS_LOG_LOGIC ("Number of m_hostRoutes = " << m_hostRoutes.size ());
-  for (HostRoutesCI i = m_hostRoutes.begin (); 
-       i != m_hostRoutes.end (); 
-       i++) 
-    {
-      NS_ASSERT ((*i)->IsHost ());
-      if ((*i)->GetDest ().IsEqual (dest)) 
-        {
-          if (oif != 0)
-            {
-              if (oif != m_ipv4->GetNetDevice ((*i)->GetInterface ()))
-                {
-                  NS_LOG_LOGIC ("Not on requested interface, skipping");
-                  continue;
-                }
-            }
-          allRoutes.push_back (*i);
-          NS_LOG_LOGIC (allRoutes.size () << "Found SRP host route" << *i); 
-        }
-    }
-  if (allRoutes.size () == 0) // if no host route is found
-    {
-      NS_LOG_LOGIC ("Number of m_networkRoutes" << m_networkRoutes.size ());
-      for (NetworkRoutesI j = m_networkRoutes.begin (); 
-           j != m_networkRoutes.end (); 
-           j++) 
-        {
-          Ipv4Mask mask = (*j)->GetDestNetworkMask ();
-          Ipv4Address entry = (*j)->GetDestNetwork ();
-          if (mask.IsMatch (dest, entry)) 
-            {
-              if (oif != 0)
-                {
-                  if (oif != m_ipv4->GetNetDevice ((*j)->GetInterface ()))
-                    {
-                      NS_LOG_LOGIC ("Not on requested interface, skipping");
-                      continue;
-                    }
-                }
-              allRoutes.push_back (*j);
-              NS_LOG_LOGIC (allRoutes.size () << "Found SRP network route" << *j);
-            }
-        }
-    }
-  if (allRoutes.size () == 0)  // consider external if no host/network found
-    {
-      for (ASExternalRoutesI k = m_ASexternalRoutes.begin ();
-           k != m_ASexternalRoutes.end ();
-           k++)
-        {
-          Ipv4Mask mask = (*k)->GetDestNetworkMask ();
-          Ipv4Address entry = (*k)->GetDestNetwork ();
-          if (mask.IsMatch (dest, entry))
-            {
-              NS_LOG_LOGIC ("Found external route" << *k);
-              if (oif != 0)
-                {
-                  if (oif != m_ipv4->GetNetDevice ((*k)->GetInterface ()))
-                    {
-                      NS_LOG_LOGIC ("Not on requested interface, skipping");
-                      continue;
-                    }
-                }
-              allRoutes.push_back (*k);
-              break;
-            }
-        }
-    }
-  if (allRoutes.size () > 0 ) // if route(s) is found
-    {
-      // pick up one of the routes uniformly at random if random
-      // ECMP routing is enabled, or always select the first route
-      // consistently if random ECMP routing is disabled
-      uint32_t selectIndex;
-      if (m_randomEcmpRouting)
-        {
-          selectIndex = m_rand->GetInteger (0, allRoutes.size ()-1);
-        }
-      else 
-        {
-          selectIndex = 0;
-        }
-      Ipv4RoutingTableEntry* route = allRoutes.at (selectIndex); 
-      // create a Ipv4Route object from the selected routing table entry
-      rtentry = Create<Ipv4Route> ();
-      rtentry->SetDestination (route->GetDest ());
-      // XXX handle multi-address case
-      rtentry->SetSource (m_ipv4->GetAddress (route->GetInterface (), 0).GetLocal ());
-      rtentry->SetGateway (route->GetGateway ());
-      uint32_t interfaceIdx = route->GetInterface ();
-      rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
-      return rtentry;
-    }
-  else 
-    {
-      return 0;
-    }
-}
-*/
-
-uint32_t 
-Ipv4SRPRouting::GetNRoutes (void) const
-{
-  NS_LOG_FUNCTION (this);
-  uint32_t n = 0;
-  n += m_hostRoutes.size ();
-  n += m_networkRoutes.size ();
-  n += m_ASexternalRoutes.size ();
-  return n;
-}
-
-Ipv4RoutingTableEntry *
-Ipv4SRPRouting::GetRoute (uint32_t index) const
-{
-  NS_LOG_FUNCTION (this << index);
-  if (index < m_hostRoutes.size ())
-    {
-      uint32_t tmp = 0;
-      for (HostRoutesCI i = m_hostRoutes.begin (); 
-           i != m_hostRoutes.end (); 
-           i++) 
-        {
-          if (tmp  == index)
-            {
-              return *i;
-            }
-          tmp++;
-        }
-    }
-  index -= m_hostRoutes.size ();
-  uint32_t tmp = 0;
-  if (index < m_networkRoutes.size ())
-    {
-      for (NetworkRoutesCI j = m_networkRoutes.begin (); 
-           j != m_networkRoutes.end ();
-           j++)
-        {
-          if (tmp == index)
-            {
-              return *j;
-            }
-          tmp++;
-        }
-    }
-  index -= m_networkRoutes.size ();
-  tmp = 0;
-  for (ASExternalRoutesCI k = m_ASexternalRoutes.begin (); 
-       k != m_ASexternalRoutes.end (); 
-       k++) 
-    {
-      if (tmp == index)
-        {
-          return *k;
-        }
-      tmp++;
-    }
-  NS_ASSERT (false);
-  // quiet compiler.
-  return 0;
-}
-void 
-Ipv4SRPRouting::RemoveRoute (uint32_t index)
-{
-  NS_LOG_FUNCTION (this << index);
-  if (index < m_hostRoutes.size ())
-    {
-      uint32_t tmp = 0;
-      for (HostRoutesI i = m_hostRoutes.begin (); 
-           i != m_hostRoutes.end (); 
-           i++) 
-        {
-          if (tmp  == index)
-            {
-              NS_LOG_LOGIC ("Removing route " << index << "; size = " << m_hostRoutes.size ());
-              delete *i;
-              m_hostRoutes.erase (i);
-              NS_LOG_LOGIC ("Done removing host route " << index << "; host route remaining size = " << m_hostRoutes.size ());
-              return;
-            }
-          tmp++;
-        }
-    }
-  index -= m_hostRoutes.size ();
-  uint32_t tmp = 0;
-  for (NetworkRoutesI j = m_networkRoutes.begin (); 
-       j != m_networkRoutes.end (); 
-       j++) 
-    {
-      if (tmp == index)
-        {
-          NS_LOG_LOGIC ("Removing route " << index << "; size = " << m_networkRoutes.size ());
-          delete *j;
-          m_networkRoutes.erase (j);
-          NS_LOG_LOGIC ("Done removing network route " << index << "; network route remaining size = " << m_networkRoutes.size ());
-          return;
-        }
-      tmp++;
-    }
-  index -= m_networkRoutes.size ();
-  tmp = 0;
-  for (ASExternalRoutesI k = m_ASexternalRoutes.begin (); 
-       k != m_ASexternalRoutes.end ();
-       k++)
-    {
-      if (tmp == index)
-        {
-          NS_LOG_LOGIC ("Removing route " << index << "; size = " << m_ASexternalRoutes.size ());
-          delete *k;
-          m_ASexternalRoutes.erase (k);
-          NS_LOG_LOGIC ("Done removing network route " << index << "; network route remaining size = " << m_networkRoutes.size ());
-          return;
-        }
-      tmp++;
-    }
-  NS_ASSERT (false);
-}
-
-int64_t
-Ipv4SRPRouting::AssignStreams (int64_t stream)
-{
-  NS_LOG_FUNCTION (this << stream);
-  m_rand->SetStream (stream);
-  return 1;
-}
-
 void
 Ipv4SRPRouting::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  for (HostRoutesI i = m_hostRoutes.begin (); 
-       i != m_hostRoutes.end (); 
-       i = m_hostRoutes.erase (i)) 
-    {
-      delete (*i);
-    }
-  for (NetworkRoutesI j = m_networkRoutes.begin (); 
-       j != m_networkRoutes.end (); 
-       j = m_networkRoutes.erase (j)) 
-    {
-      delete (*j);
-    }
-  for (ASExternalRoutesI l = m_ASexternalRoutes.begin (); 
-       l != m_ASexternalRoutes.end ();
-       l = m_ASexternalRoutes.erase (l))
-    {
-      delete (*l);
-    }
-
   Ipv4RoutingProtocol::DoDispose ();
 }
 
@@ -408,47 +87,6 @@ void
 Ipv4SRPRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream) const
 {
   NS_LOG_FUNCTION (this << stream);
-  std::ostream* os = stream->GetStream ();
-  if (GetNRoutes () > 0)
-    {
-      *os << "Destination     Gateway         Genmask         Flags Metric Ref    Use Iface" << std::endl;
-      for (uint32_t j = 0; j < GetNRoutes (); j++)
-        {
-          std::ostringstream dest, gw, mask, flags;
-          Ipv4RoutingTableEntry route = GetRoute (j);
-          dest << route.GetDest ();
-          *os << std::setiosflags (std::ios::left) << std::setw (16) << dest.str ();
-          gw << route.GetGateway ();
-          *os << std::setiosflags (std::ios::left) << std::setw (16) << gw.str ();
-          mask << route.GetDestNetworkMask ();
-          *os << std::setiosflags (std::ios::left) << std::setw (16) << mask.str ();
-          flags << "U";
-          if (route.IsHost ())
-            {
-              flags << "H";
-            }
-          else if (route.IsGateway ())
-            {
-              flags << "G";
-            }
-          *os << std::setiosflags (std::ios::left) << std::setw (6) << flags.str ();
-          // Metric not implemented
-          *os << "-" << "      ";
-          // Ref ct not implemented
-          *os << "-" << "      ";
-          // Use not implemented
-          *os << "-" << "   ";
-          if (Names::FindName (m_ipv4->GetNetDevice (route.GetInterface ())) != "")
-            {
-              *os << Names::FindName (m_ipv4->GetNetDevice (route.GetInterface ()));
-            }
-          else
-            {
-              *os << route.GetInterface ();
-            }
-          *os << std::endl;
-        }
-    }
 }
 
 /*Ptr<SRPRouter> Ipv4SRPRouting::getRouter() const{
@@ -620,9 +258,6 @@ Ipv4SRPRouting::NotifyInterfaceUp (uint32_t i)
   NS_LOG_FUNCTION (this << i);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      //SRPRouteManager::DeleteSRPRoutes ();
-      //SRPRouteManager::BuildSRPRoutingDatabase ();
-      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -632,9 +267,6 @@ Ipv4SRPRouting::NotifyInterfaceDown (uint32_t i)
   NS_LOG_FUNCTION (this << i);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      //SRPRouteManager::DeleteSRPRoutes ();
-      //SRPRouteManager::BuildSRPRoutingDatabase ();
-      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -644,9 +276,6 @@ Ipv4SRPRouting::NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress addre
   NS_LOG_FUNCTION (this << interface << address);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      //SRPRouteManager::DeleteSRPRoutes ();
-      //SRPRouteManager::BuildSRPRoutingDatabase ();
-      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
@@ -656,9 +285,6 @@ Ipv4SRPRouting::NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress ad
   NS_LOG_FUNCTION (this << interface << address);
   if (m_respondToInterfaceEvents && Simulator::Now ().GetSeconds () > 0)  // avoid startup events
     {
-      //SRPRouteManager::DeleteSRPRoutes ();
-      //SRPRouteManager::BuildSRPRoutingDatabase ();
-      //SRPRouteManager::InitializeRoutes ();
     }
 }
 
