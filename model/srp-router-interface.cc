@@ -157,11 +157,19 @@ SRPRouter::SRPRouter ()
 {
   NS_LOG_FUNCTION (this);
   m_routerId.Set (Ipv4SRPRoutingHelper::AllocateRouterId ());
+  //Time onInterval = Seconds (1.02);
+  //Simulator::Schedule (onInterval, &update);
+
 }
 
 SRPRouter::~SRPRouter ()
 {
   NS_LOG_FUNCTION (this);
+}
+
+void SRPRouter::update(){
+  cout << "update " << m_id << endl;
+  
 }
 
 void 

@@ -113,6 +113,7 @@ public:
  */
   SRPRouter ();
 
+  void update();
 
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);

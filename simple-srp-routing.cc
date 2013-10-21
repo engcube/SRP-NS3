@@ -59,6 +59,33 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 
+void update(){
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update();
+  }
+}
+
+/*
+// ICMP echo packet
+  Ptr<Packet> p = Create<Packet>(); 
+  Icmpv4Echo echo; 
+  echo.SetSequenceNumber(m_Seq++); 
+  echo.SetIdentifier (0); 
+  Icmpv4Header icmpheader; 
+  icmpheader.SetType (Icmpv4Header::ECHO); 
+  icmpheader.SetCode(0); 
+  icmpheader.EnableChecksum(); 
+  Ipv4Header ipHeader; 
+  ipHeader.SetDestination(m_dstAddress); 
+  ipHeader.SetSource(m_srcAddress); 
+  ipHeader.SetProtocol(1); // ICMP 
+  ipHeader.SetPayloadSize(28); // 20+8 
+  ipHeader.SetTtl(16); 
+  ipHeader.EnableChecksum(); 
+  p->AddHeader(echo); 
+  p->AddHeader(icmpheader); 
+  p->AddHeader(ipHeader); 
+*/
 int 
 main (int argc, char *argv[])
 {
@@ -205,13 +232,21 @@ main (int argc, char *argv[])
       flowmon = flowmonHelper.InstallAll ();
     }
 
-  for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
+  int simulateTime = 11;
+  int simulateInterval = 1;
+  /*for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
       cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
+  }*/
+  
+  for(int i=1; i<simulateTime/simulateInterval;i++){
+    Time onInterval = Seconds (i*simulateInterval);
+    Simulator::Schedule (onInterval, &update);
   }
 
   NS_LOG_INFO ("Run Simulation.");
-  Simulator::Stop (Seconds (11));
+  Simulator::Stop (Seconds (simulateTime));
   Simulator::Run ();
+
   NS_LOG_INFO ("Done.");
 
   if (enableFlowMonitor)
@@ -220,7 +255,7 @@ main (int argc, char *argv[])
     }
 
   Simulator::Destroy ();
-
+  
 
 
   return 0;

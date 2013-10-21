@@ -31,6 +31,8 @@
 #include "ns3/srp-router-interface.h"
 #include "ns3/conf-loader.h"
 
+#include "ns3/simulator.h"
+
 #include <iostream>
 using namespace std;
 
