@@ -109,7 +109,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
       if(it->second==1){
           v1_list.push_back(it->first);
-      }else if(it->second==3){
+      }else if(it->second>1){
           v3_list.push_back(it->first);
       }
   }

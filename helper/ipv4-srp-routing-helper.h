@@ -48,7 +48,6 @@ public:
    * SRP routing tasks.
    */
   Ipv4SRPRoutingHelper ();
-  Ipv4SRPRoutingHelper (ConfLoader mconf);
   /**
    * \brief Construct a SRPRoutingHelper from another previously initialized
    * instance (Copy Constructor).
@@ -97,9 +96,9 @@ public:
   static void RecomputeRoutingTables (void);
 
   static uint32_t AllocateRouterId ();
+  //void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
 
-  void CreateSRPGrid(Ptr<Node> node) const;
-
+  //void CreateSRPGrid(Ptr<Node> node) const;
 private:
   /**
    * \internal

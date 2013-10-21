@@ -82,7 +82,7 @@ SRPGrid::SRPGrid(){
 
 string SRPRoutingEntry::toString(){
     stringstream ss;
-    ss << mSubnet.toString() << ":" << m_description << "\n";
+    ss << mSubnet.toString() << ":" << m_description << endl;
     for(map<int, int>::iterator it = mNodeList.begin(); it!=mNodeList.end();++it){
         ss << it->first << ":" << it->second << "\t";
     }
@@ -167,10 +167,30 @@ SRPRouter::~SRPRouter ()
   NS_LOG_FUNCTION (this);
 }
 
-void SRPRouter::update(){
-  cout << "update " << m_id << endl;
-  
+void SRPRouter::updateNode(){
+  cout << "update Node" << m_id << endl;
+  if (ConfLoader::Instance()->getNodeActions().count(m_id)>0){
+      if(ConfLoader::Instance()->getNodeAction(m_id)){
+          //send UP message
+          ConfLoader::Instance()->setNodeState(m_id, true);
+      }else{
+          //send DOWN message
+          ConfLoader::Instance()->setNodeState(m_id, false);
+      }
+  }
 }
+
+void SRPRouter::updateLink(){
+  cout << "update Link " << m_id << endl;
+  /*vector<int> result = ConfLoader::Instance()->getLinkAction();
+  if(result.size()>0){
+      for(std::vector<int>::iterator it = result.begin(); it!=result.end(); ++it){
+          ConfLoader::
+      }
+  }*/
+}
+
+
 
 void 
 SRPRouter::SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing)

@@ -110,6 +110,39 @@ map<int, bool> ConfLoader::getNodeActions(){
     return this->nodeActions;
 }
 
+bool ConfLoader::getNodeAction(int i){
+    return this->nodeActions[i];
+}
+
+void ConfLoader::setNodeState(int i, bool state){
+    this->nodeStates[i] = state;
+}
+
+bool ConfLoader::getNodeState(int i){
+    return this->nodeStates[i];
+}
+
+bool ConfLoader::getLinkState(int i, int j){
+    return this->linkStates[make_pair(i,j)];
+}
+
+bool ConfLoader::getLinkAction(int i, int j){
+    return this->linkActions[make_pair(i,j)];
+}
+
+vector<int> ConfLoader::getLinkAction(int i){
+    vector<int> result;
+    for(int k=0; k<getTotalNum(); k++){
+        pair<int,int> tmp(i,k);
+        //if (this->linkActions.find(tmp)){
+            result.push_back(k);
+            //this->linkActions.erase(tmp);
+        //}
+    }
+    return result;
+}
+
+
 void ConfLoader::setNodeActions(map<int, bool> actions){
     this->nodeActions = actions;
 }
@@ -130,5 +163,93 @@ void ConfLoader::clearLinkActions(){
     this->linkActions.clear();
 }
 
+void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
+  //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();
+  cout << id << ":status:" << this->nodeStates[id] << endl;
+  if(this->nodeStates[id]){
+    
+    if( id < m_CoreNum){  //Core
+        for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+            map<int, int> mmap;
+            if(this->nodeStates[i] && getLinkState(id,i)){
+                mmap[i] = 1;
+            }else{
+                mmap[i] = 0;
+            }
+            SRPRoutingEntry entry(index_subnet_map[i], mmap);
+            mSRPGrid->addSRPGridEntry(entry);
+        }
+        map<int, int> mmap;
+        for(int i = m_CoreNum+m_ToRNum; i<getTotalNum(); i++){
+            if(this->nodeStates[i] && getLinkState(id,i)){
+              mmap[i] = 1;
+            }else{
+                mmap[i]=0;
+            }
+        }
+        Subnet subnet(0,0);
+        SRPRoutingEntry entry(subnet, mmap);
+        entry.setDescription("B_exit");
+        mSRPGrid->addSRPGridEntry(entry);
+
+    }
+
+    else if( id < m_CoreNum+m_ToRNum){ //ToR
+        
+        for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+           if(i==id){
+              continue;
+           }
+           map<int, int> mmap;
+           for(int j=0; j < m_CoreNum; j++){
+            if(this->nodeStates[j] && getLinkState(j,id)){
+              mmap[j] = 1;
+            }else{
+                mmap[j]=0;
+            }
+           }
+           SRPRoutingEntry entry(index_subnet_map[i], mmap);
+           mSRPGrid->addSRPGridEntry(entry);
+        }
+        map<int, int> mmap;
+        for(int j=0; j < m_CoreNum; j++){
+          if(this->nodeStates[j] && getLinkState(j,id)){
+              mmap[j] = 1;
+            }
+            else{
+                mmap[j]=0;
+            }
+        }
+        Subnet subnet(0,0);
+        SRPRoutingEntry entry(subnet, mmap);
+        entry.setDescription("B_exit");
+        mSRPGrid->addSRPGridEntry(entry);
+
+    }else { //NodeType.BORDER
+        for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
+           map<int, int> mmap;
+           for(int j=0; j < m_CoreNum; j++){
+              if(this->nodeStates[j]&& getLinkState(j,id)){
+                mmap[j] = 1;
+              }else{
+                mmap[j]=0;
+            }
+           }
+           for(int j=m_CoreNum+m_ToRNum; j< getTotalNum(); j++){
+              if(j==id){
+                continue;
+              }
+              if(this->nodeStates[j]&& getLinkState(j,id)){
+                mmap[j] = 3;
+              }else{
+                mmap[j]=2;
+              }
+           }
+           SRPRoutingEntry entry(index_subnet_map[i], mmap);
+           mSRPGrid->addSRPGridEntry(entry);
+        }
+    }
+  }
+}
 
 }

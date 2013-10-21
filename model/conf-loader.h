@@ -8,11 +8,14 @@
 
 #include "ns3/node-container.h"
 #include "ns3/subnet.h"
+#include "ns3/srp-router-interface.h"
+
 using namespace std;
 
 namespace ns3{
 
 class NodeContainer;
+class SRPGrid;
 
 class ConfLoader
 {
@@ -41,6 +44,9 @@ public:
 
   map<int, bool> getNodeStates();
   void setNodeStates(map<int, bool> states);
+  void setNodeState(int i, bool state);
+  bool getNodeState(int i);
+  bool getLinkState(int i, int j);
 
   map<pair<int,int>,bool> getLinkStates();
   void setLinkStates(map<pair<int,int>,bool> states);
@@ -48,13 +54,18 @@ public:
 
   map<int, bool> getNodeActions();
   void setNodeActions(map<int, bool> actions);
+  bool getNodeAction(int i);
 
   map<pair<int,int>,bool> getLinkActions();
   void setLinkActions(map<pair<int,int>,bool> actions);
+  bool getLinkAction(int i, int j);
+
+  vector<int> getLinkAction(int i);
 
   void clearNodeActions();
   void clearLinkActions();
 
+  void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
 private:
 	ConfLoader(){};
 	ConfLoader(ConfLoader const&){};
