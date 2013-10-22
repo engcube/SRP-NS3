@@ -50,7 +50,7 @@ public:
 
   map<pair<int,int>,bool> getLinkStates();
   void setLinkStates(map<pair<int,int>,bool> states);
-
+  void setLinkState(int i, int j, bool state);
 
   map<int, bool> getNodeActions();
   void setNodeActions(map<int, bool> actions);

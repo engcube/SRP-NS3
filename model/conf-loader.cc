@@ -106,6 +106,16 @@ void ConfLoader::setLinkStates(map<pair<int,int>,bool> states){
     this->linkStates = states;
 }
 
+void ConfLoader::setLinkState(int i, int j, bool state){
+    if(i>j){
+        this->linkStates[make_pair(j,i)] = state;
+    }
+    else{
+        this->linkStates[make_pair(i,j)] = state;
+    }
+}
+
+
 map<int, bool> ConfLoader::getNodeActions(){
     return this->nodeActions;
 }
@@ -165,7 +175,7 @@ void ConfLoader::clearLinkActions(){
 
 void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
   //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();
-  cout << id << ":status:" << this->nodeStates[id] << endl;
+  //cout << id << ":status:" << this->nodeStates[id] << endl;
   if(this->nodeStates[id]){
     
     if( id < m_CoreNum){  //Core
@@ -235,15 +245,24 @@ void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
                 mmap[j]=0;
             }
            }
+           
            for(int j=m_CoreNum+m_ToRNum; j< getTotalNum(); j++){
-              if(j==id){
-                continue;
-              }
-              if(this->nodeStates[j]&& getLinkState(j,id)){
-                mmap[j] = 3;
-              }else{
-                mmap[j]=2;
-              }
+                if(j==id){
+                    continue;
+                }
+                mmap[j] = 0;
+                for(int k=0; k < m_CoreNum; k++){
+                    if(this->nodeStates[k]&& getLinkState(k,id)){
+                        mmap[j]++;
+                    }
+                }
+                //cout << mmap[j] << endl;
+                if(j<id && this->nodeStates[j]&& getLinkState(j,id)){
+                    mmap[j]++;
+                }else if(j>id && this->nodeStates[j]&& getLinkState(id,j)){
+                    mmap[j]++;
+                }                
+                //cout << mmap[j] << endl;
            }
            SRPRoutingEntry entry(index_subnet_map[i], mmap);
            mSRPGrid->addSRPGridEntry(entry);
