@@ -116,13 +116,13 @@ void ConfLoader::setLinkState(int i, int j, bool state){
 }
 
 
-map<int, bool> ConfLoader::getNodeActions(){
+/*map<int, bool> ConfLoader::getNodeActions(){
     return this->nodeActions;
 }
 
 bool ConfLoader::getNodeAction(int i){
     return this->nodeActions[i];
-}
+}*/
 
 void ConfLoader::setNodeState(int i, bool state){
     this->nodeStates[i] = state;
@@ -136,7 +136,7 @@ bool ConfLoader::getLinkState(int i, int j){
     return this->linkStates[make_pair(i,j)];
 }
 
-bool ConfLoader::getLinkAction(int i, int j){
+/*bool ConfLoader::getLinkAction(int i, int j){
     return this->linkActions[make_pair(i,j)];
 }
 
@@ -171,7 +171,7 @@ void ConfLoader::clearNodeActions(){
 
 void ConfLoader::clearLinkActions(){
     this->linkActions.clear();
-}
+}*/
 
 void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
   //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();

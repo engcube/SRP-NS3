@@ -108,6 +108,24 @@ void SRPRoutingEntry::setDescription(string desc){
     m_description = desc;
 }
 
+bool SRPRoutingEntry::hasEffectSubnet(){
+    for(map<int, int>::iterator it = mNodeList.begin(); it != mNodeList.end(); ++it){
+        if(it->second==1 || it->second==3){
+          return true;
+        }
+    }
+    return false;
+}
+
+vector<Subnet> SRPGrid::getEffectSubnet(){
+  vector<Subnet> effcetSubnets;
+  for(list<SRPRoutingEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it){
+    if(it->hasEffectSubnet()){
+      effcetSubnets.push_back(it->getSubnet());
+    }
+  }
+  return effcetSubnets;
+}
 
 void SRPGrid::addSRPGridEntry(SRPRoutingEntry entry){
     m_entries.push_back(entry);
@@ -167,13 +185,13 @@ SRPRouter::~SRPRouter ()
   NS_LOG_FUNCTION (this);
 }
 
-void SRPRouter::updateNode(){
+/*void SRPRouter::updateNode(){
   cout << "update Node" << m_id << endl;
   if (ConfLoader::Instance()->getNodeActions().count(m_id)>0){
-      if(ConfLoader::Instance()->getNodeAction(m_id)){
+      if(ConfLoader::Instance()->getNodeAction(m_id) && ConfLoader::Instance()->getNodeState(m_id)==false){
           //send UP message
           ConfLoader::Instance()->setNodeState(m_id, true);
-      }else{
+      }else if(ConfLoader::Instance()->getNodeAction(m_id) && ConfLoader::Instance()->getNodeState(m_id)==true){
           //send DOWN message
           ConfLoader::Instance()->setNodeState(m_id, false);
       }
@@ -182,15 +200,41 @@ void SRPRouter::updateNode(){
 
 void SRPRouter::updateLink(){
   cout << "update Link " << m_id << endl;
-  /*vector<int> result = ConfLoader::Instance()->getLinkAction();
-  if(result.size()>0){
-      for(std::vector<int>::iterator it = result.begin(); it!=result.end(); ++it){
-          ConfLoader::
+  if(m_id < ConfLoader::Instance()->getCoreNum()){ //Core
+    for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum();i++){
+      if (ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,j))
+      {
       }
-  }*/
+    }
+
+  }else if(m_id < ConfLoader::Instance()->getToRNum()){ //ToR
+
+  }else{ //Border
+
+  }
 }
+*/
 
+bool SRPRouter::update(){
+  cout << "update  " << m_id << endl;
+  /*if(m_id < ConfLoader::Instance()->getCoreNum()){ //Core
+    for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum();i++){
+      if (ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i))
+      {
+      }
+    }
+  }else if(m_id < ConfLoader::Instance()->getToRNum()){ //ToR
 
+  }else{ //Border
+
+  }*/
+  Ptr<SRPGrid> mGrid = CreateObject<SRPGrid> ();
+  ConfLoader::Instance()->UpdateSRPGrid(m_id, mGrid);
+  vector<Subnet> lastList = m_routingProtocol->GetSRPGrid()->getEffectSubnet();
+  vector<Subnet> curList = mGrid->getEffectSubnet();
+  m_routingProtocol->SetSRPGrid(mGrid);
+  return true;
+}
 
 void 
 SRPRouter::SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing)

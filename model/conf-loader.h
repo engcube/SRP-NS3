@@ -52,7 +52,7 @@ public:
   void setLinkStates(map<pair<int,int>,bool> states);
   void setLinkState(int i, int j, bool state);
 
-  map<int, bool> getNodeActions();
+  /*map<int, bool> getNodeActions();
   void setNodeActions(map<int, bool> actions);
   bool getNodeAction(int i);
 
@@ -63,7 +63,7 @@ public:
   vector<int> getLinkAction(int i);
 
   void clearNodeActions();
-  void clearLinkActions();
+  void clearLinkActions();*/
 
   void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
 private:

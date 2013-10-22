@@ -62,6 +62,7 @@ public:
     map<int, int> getNodeList();
     void setNodeList(map<int, int> mNodeList); 
     string toString();
+    bool hasEffectSubnet();
 private:
     Subnet mSubnet;
     map<int, int> mNodeList; 
@@ -84,6 +85,7 @@ public:
     void setType(GridType type);
     string toString();
     map<int, int> getNodeListByHost(Ipv4Address dest);
+    vector<Subnet> getEffectSubnet();
 private:
     GridType m_type;
     list<SRPRoutingEntry> m_entries;
@@ -113,8 +115,9 @@ public:
  */
   SRPRouter ();
 
-  void updateNode();
-  void updateLink();
+  /*void updateNode();
+  void updateLink();*/
+  bool update();
 
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);
