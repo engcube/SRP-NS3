@@ -228,11 +228,52 @@ bool SRPRouter::update(){
   }else{ //Border
 
   }*/
+  if(!ConfLoader::Instance()->getNodeState(m_id)){
+      return false;
+  }
   Ptr<SRPGrid> mGrid = CreateObject<SRPGrid> ();
   ConfLoader::Instance()->UpdateSRPGrid(m_id, mGrid);
   vector<Subnet> lastList = m_routingProtocol->GetSRPGrid()->getEffectSubnet();
   vector<Subnet> curList = mGrid->getEffectSubnet();
+  vector<Subnet> downList;
+  vector<Subnet> upList;
   m_routingProtocol->SetSRPGrid(mGrid);
+  cout << m_id << "Current Grid " << mGrid->toString() << endl;
+  for(vector<Subnet>::iterator curit=curList.begin(); curit!=curList.end(); ++curit){
+      bool isExist = false;
+      for(vector<Subnet>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
+          if(curit->equals(*lastit)){
+              isExist = true;
+              break;
+          }
+      }
+      if(!isExist){
+          upList.push_back(*curit);
+      }
+  }      
+  for(vector<Subnet>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
+      bool isExist = false;  
+      for(vector<Subnet>::iterator curit=curList.begin(); curit!=curList.end();++curit){
+          if(lastit->equals(*curit)){
+              isExist = true;
+              break;
+          }
+      }
+      if(!isExist){
+          downList.push_back(*lastit);
+      }
+  }
+  if(downList.size()==0&&upList.size()==0){
+      return false;
+  }
+  cout << "UP " << endl;
+  for(vector<Subnet>::iterator it=upList.begin(); it!=upList.end();++it){
+      cout << it->toString() << endl;
+  }
+  cout << "DOWN " << endl;
+  for(vector<Subnet>::iterator it=downList.begin(); it!=downList.end();++it){
+      cout << it->toString() << endl;
+  }
   return true;
 }
 

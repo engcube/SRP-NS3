@@ -250,18 +250,25 @@ void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
                 if(j==id){
                     continue;
                 }
-                mmap[j] = 0;
+                mmap[j] = 2;
                 for(int k=0; k < m_CoreNum; k++){
                     if(this->nodeStates[k]&& getLinkState(k,id)){
-                        mmap[j]++;
+                        mmap[j] = 3;
+                    }else{
+                        mmap[j] = 2;
                     }
                 }
-                //cout << mmap[j] << endl;
-                if(j<id && this->nodeStates[j]&& getLinkState(j,id)){
-                    mmap[j]++;
-                }else if(j>id && this->nodeStates[j]&& getLinkState(id,j)){
-                    mmap[j]++;
-                }                
+                if(mmap[j]==3){
+                    if(j<id && this->nodeStates[j]&& getLinkState(j,id)){
+                        mmap[j] = 3;
+                    }else if(j<id){
+                        mmap[j] = 2;
+                    }else if(j>id && this->nodeStates[j]&& getLinkState(id,j)){
+                        mmap[j] = 3;
+                    } else if(j>id){
+                        mmap[j] = 2;
+                    }
+                }           
                 //cout << mmap[j] << endl;
            }
            SRPRoutingEntry entry(index_subnet_map[i], mmap);

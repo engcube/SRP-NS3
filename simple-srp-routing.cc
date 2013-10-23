@@ -60,9 +60,20 @@ using namespace std;
 NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 
 void update(){
+  /*for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->updateNode();
+  }*/
+  ConfLoader::Instance()->setNodeState(2,false);
+  ConfLoader::Instance()->setNodeState(3,false);
+
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
-    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update();
+    if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
+      // if one SRP router found that Grid have changed, then there is no need to update others
+      break;
+    }
   }
+  //ConfLoader::Instance()->clearNodeActions();
+  //ConfLoader::Instance()->clearLinkActions();
 }
 
 /*
@@ -163,6 +174,28 @@ main (int argc, char *argv[])
       }
   }
 
+  // inital node states
+  map<int, bool> nodeStates;
+  for(int i=0; i< ConfLoader::Instance()->getTotalNum(); i++){
+      nodeStates.insert(make_pair(i, true));
+  }
+  ConfLoader::Instance()->setNodeStates(nodeStates);
+  //ConfLoader::Instance()->setNodeState(0,false);
+  // inital link states
+  map<pair<int,int>, bool> linkStates;
+  for(int j=0;j<ConfLoader::Instance()->getCoreNum();j++){
+    for(int i=ConfLoader::Instance()->getCoreNum(); i< ConfLoader::Instance()->getTotalNum(); i++){
+      linkStates.insert(make_pair(make_pair(j,i), true));
+    }
+  }
+  for(int j=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum();j<ConfLoader::Instance()->getTotalNum();j++){
+    for(int i=j+1; i< ConfLoader::Instance()->getTotalNum(); i++){
+      linkStates.insert(make_pair(make_pair(j,i), true));
+    }
+  }
+  ConfLoader::Instance()->setLinkStates(linkStates);
+  //ConfLoader::Instance()->setLinkState(6,7,false);
+
   InternetStackHelper internet;
 
   Ipv4ListRoutingHelper listRouting;
@@ -198,7 +231,7 @@ main (int argc, char *argv[])
   }
   
   NS_LOG_INFO ("Create Applications.");
-  
+
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
@@ -231,13 +264,13 @@ main (int argc, char *argv[])
     {
       flowmon = flowmonHelper.InstallAll ();
     }
+  
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
+      cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
+  }
 
   int simulateTime = 11;
-  int simulateInterval = 1;
-  /*for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
-      cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
-  }*/
-  
+  int simulateInterval = 3;
   for(int i=1; i<simulateTime/simulateInterval;i++){
     Time onInterval = Seconds (i*simulateInterval);
     Simulator::Schedule (onInterval, &update);
