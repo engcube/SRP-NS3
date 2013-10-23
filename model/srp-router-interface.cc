@@ -217,17 +217,7 @@ void SRPRouter::updateLink(){
 
 bool SRPRouter::update(){
   cout << "update  " << m_id << endl;
-  /*if(m_id < ConfLoader::Instance()->getCoreNum()){ //Core
-    for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum();i++){
-      if (ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i))
-      {
-      }
-    }
-  }else if(m_id < ConfLoader::Instance()->getToRNum()){ //ToR
 
-  }else{ //Border
-
-  }*/
   if(!ConfLoader::Instance()->getNodeState(m_id)){
       return false;
   }
@@ -238,7 +228,7 @@ bool SRPRouter::update(){
   vector<Subnet> downList;
   vector<Subnet> upList;
   m_routingProtocol->SetSRPGrid(mGrid);
-  cout << m_id << "Current Grid " << mGrid->toString() << endl;
+  //cout << m_id << "Current Grid " << mGrid->toString() << endl;
   for(vector<Subnet>::iterator curit=curList.begin(); curit!=curList.end(); ++curit){
       bool isExist = false;
       for(vector<Subnet>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
@@ -266,15 +256,58 @@ bool SRPRouter::update(){
   if(downList.size()==0&&upList.size()==0){
       return false;
   }
-  cout << "UP " << endl;
+  //send
+  /*cout << "UP " << endl;
   for(vector<Subnet>::iterator it=upList.begin(); it!=upList.end();++it){
       cout << it->toString() << endl;
   }
   cout << "DOWN " << endl;
   for(vector<Subnet>::iterator it=downList.begin(); it!=downList.end();++it){
       cout << it->toString() << endl;
-  }
+  }*/
+  send2Peer();
   return true;
+}
+
+void SRPRouter::send2Peer(){
+  if(m_id<ConfLoader::Instance()->getCoreNum()){
+      for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum(); i++){ 
+          if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
+                sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal ());
+          }
+      }
+  }else{
+      for(int i=0; i<ConfLoader::Instance()->getCoreNum(); i++){
+          if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
+                sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal ());
+          }
+      }
+      if(m_id>=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+          for(int i=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i<ConfLoader::Instance()->getTotalNum(); i++){
+              if(m_id>i){
+                  if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
+                      sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                          ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal ());
+                  }
+              }else if(m_id<i){
+                  if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
+                      sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                          ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal ());
+                  }
+              }
+          }
+      }
+  }
+}
+
+void SRPRouter::sendMessage(Ipv4Address ip){
+  Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(m_id), TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  m_socket->Bind ();
+  m_socket->Connect (Address (InetSocketAddress (ip, 9)));
+  Ptr<Packet> p = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello"), 5);
+  m_socket->Send (p);
 }
 
 void 

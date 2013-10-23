@@ -139,6 +139,9 @@ private:
   int m_id;
   virtual ~SRPRouter ();
   
+  void sendMessage(Ipv4Address ip);
+  void send2Peer();
+
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;
 

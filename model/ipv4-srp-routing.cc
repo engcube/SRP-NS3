@@ -158,14 +158,6 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
   rtentry->SetOutputDevice (m_ipv4->GetNetDevice (my_index_of_interface));
   //Ptr<Ipv4Route> rtentry = 0;
-
-  /*Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(3), TypeId::LookupByName ("ns3::UdpSocketFactory"));
-  m_socket->Bind ();
-  m_socket->Connect (Address (InetSocketAddress ("10.0.2.2", 9)));
-  Ptr<Packet> p = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello"), 5);
-  m_socket->Send (p);
-  cout << "Send a packet" << endl;*/
-
   return rtentry;
 }
 
