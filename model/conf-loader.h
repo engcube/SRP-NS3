@@ -69,7 +69,8 @@ public:
 
   void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
   int getIndexBySubnet(Subnet subnet);
-  
+  Subnet getSubnetByID(int id);
+
   map<Ipv4Address, int> getIpv4IndexMap();
   void setIpv4IndexMap(map<Ipv4Address, int> m_map);
   void addItem2Ipv4IndexMap(Ipv4Address ip, int index);

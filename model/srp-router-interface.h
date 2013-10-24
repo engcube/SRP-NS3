@@ -87,6 +87,7 @@ public:
     string toString();
     map<int, int> getNodeListByHost(Ipv4Address dest);
     vector<int> getEffectSubnet();
+    map<int, int> getNodeListByID(int id);
 private:
     GridType m_type;
     list<SRPRoutingEntry> m_entries;

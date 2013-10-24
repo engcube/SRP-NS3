@@ -156,6 +156,15 @@ map<int, int> SRPGrid::getNodeListByHost(Ipv4Address dest){
     return emp;
 }
 
+map<int, int> SRPGrid::getNodeListByID(int id){
+    for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
+        if(it->getSubnet().equals(ConfLoader::Instance()->getSubnetByID(id))){
+            return it->getNodeList();
+        }
+    }
+    map<int,int> emp;
+    return emp;
+}
 
 // ---------------------------------------------------------------------------
 //

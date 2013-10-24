@@ -194,6 +194,11 @@ void ConfLoader::addItem2Ipv4IndexMap(Ipv4Address ip, int index){
     m_ipv4_index_map[ip] = index;
 }
 
+Subnet ConfLoader::getSubnetByID(int id){
+    return index_subnet_map[id];
+}
+
+
 int ConfLoader::getIndexByIpv4(Ipv4Address ip){
     return m_ipv4_index_map[ip];
 }

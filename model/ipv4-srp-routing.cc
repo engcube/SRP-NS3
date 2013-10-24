@@ -103,42 +103,49 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
-  map<int, int> nodeList = m_SRPGrid->getNodeListByHost(dest);
-  //value = 1
-  vector<int> v1_list;
-  //value = 3
-  vector<int> v3_list;
-  for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
-      if(it->second==1){
-          v1_list.push_back(it->first);
-      }else if(it->second==3){
-          v3_list.push_back(it->first);
-      }
-  }
-
-  //routing algorthm: how to choose a path
-  // pick up one of the routes uniformly at random if random
-  // ECMP routing is enabled, or always select the first route
-  // consistently if random ECMP routing is disabled
 
   int destNode = -1;
-  if(v1_list.size()>0){
-      if (m_randomEcmpRouting){
-          destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
-      }
-      else{
-          destNode = v1_list.front();
-      }
-  }else if(v3_list.size()>0){
-      if (m_randomEcmpRouting){
-          destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
-      }
-      else{
-          destNode = v3_list.front();
-      }
+  map<int, int> nodeList;
+  if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
+      nodeList = m_SRPGrid->getNodeListByID(ConfLoader::Instance()->getIpv4IndexMap()[dest]);
   }else{
-      return 0;
+    nodeList = m_SRPGrid->getNodeListByHost(dest);
   }
+    //value = 1
+    vector<int> v1_list;
+    //value = 3
+    vector<int> v3_list;
+    for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
+        if(it->second==1){
+            v1_list.push_back(it->first);
+        }else if(it->second==3){
+            v3_list.push_back(it->first);
+        }
+    }
+
+    //routing algorthm: how to choose a path
+    // pick up one of the routes uniformly at random if random
+    // ECMP routing is enabled, or always select the first route
+    // consistently if random ECMP routing is disabled
+
+    if(v1_list.size()>0){
+        if (m_randomEcmpRouting){
+            destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
+        }
+        else{
+            destNode = v1_list.front();
+        }
+    }else if(v3_list.size()>0){
+        if (m_randomEcmpRouting){
+            destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
+        }
+        else{
+            destNode = v3_list.front();
+        }
+    }else{
+        return 0;
+    }
+  
 
   NS_LOG_LOGIC ("Route Found to Node " << destNode);
   int to_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(destNode, m_id);
@@ -232,7 +239,8 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
       // TODO:  Forward broadcast
     }
 
-  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination())){
+  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) || 
+          ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id){
       NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
       cout << "Destination match" << endl;
       lcb (p, header, iif);
