@@ -90,6 +90,15 @@ int ConfLoader::getInterfaceIndex(int my, int to){
     return 0;
 }
 
+int ConfLoader::getIndexBySubnet(Subnet subnet){
+    for(map<int, Subnet>::iterator it = index_subnet_map.begin(); it!=index_subnet_map.end(); ++it){
+        if (it->second.equals(subnet)){
+            return it->first;
+        }
+    }
+    return -1;
+}
+
 map<int, bool> ConfLoader::getNodeStates(){
     return this->nodeStates;
 }
@@ -172,6 +181,22 @@ void ConfLoader::clearNodeActions(){
 void ConfLoader::clearLinkActions(){
     this->linkActions.clear();
 }*/
+
+map<Ipv4Address, int> ConfLoader::getIpv4IndexMap(){
+    return m_ipv4_index_map;
+}
+
+void ConfLoader::setIpv4IndexMap(map<Ipv4Address, int> m_map){
+    m_ipv4_index_map = m_map;
+}
+
+void ConfLoader::addItem2Ipv4IndexMap(Ipv4Address ip, int index){
+    m_ipv4_index_map[ip] = index;
+}
+
+int ConfLoader::getIndexByIpv4(Ipv4Address ip){
+    return m_ipv4_index_map[ip];
+}
 
 void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
   //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();

@@ -63,8 +63,8 @@ void update(){
   /*for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->updateNode();
   }*/
-  ConfLoader::Instance()->setNodeState(2,false);
-  ConfLoader::Instance()->setNodeState(3,false);
+  //ConfLoader::Instance()->setNodeState(3,false);
+  //ConfLoader::Instance()->setNodeState(3,false);
 
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
@@ -230,12 +230,22 @@ main (int argc, char *argv[])
       ipv4InterfaceContainers.push_back(ii);
   }
   
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+      Ptr<Ipv4> m_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                          ->GetRoutingProtocol()->getIpv4();
+      for (uint32_t j = 1; j < m_ipv4->GetNInterfaces (); j++){
+          Ipv4Address addr = m_ipv4->GetAddress (j, 0).GetLocal();
+          ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
+      }
+  }
+
   NS_LOG_INFO ("Create Applications.");
 
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                     Address (InetSocketAddress ("10.0.3.2", port)));
+                     //Address (InetSocketAddress ("10.0.3.2", port)));
+                      Address (InetSocketAddress ("192.168.0.6", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node

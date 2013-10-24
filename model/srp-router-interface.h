@@ -36,6 +36,7 @@
 #include "ns3/bridge-net-device.h"
 //#include "ns3/srp-route-manager.h"
 #include "ns3/ipv4-routing-table-entry.h"
+#include "ns3/srp-tag.h"
 
 #include "ns3/subnet.h"
 #include "ns3/ipv4-srp-routing-helper.h"
@@ -85,7 +86,7 @@ public:
     void setType(GridType type);
     string toString();
     map<int, int> getNodeListByHost(Ipv4Address dest);
-    vector<Subnet> getEffectSubnet();
+    vector<int> getEffectSubnet();
 private:
     GridType m_type;
     list<SRPRoutingEntry> m_entries;
@@ -139,8 +140,8 @@ private:
   int m_id;
   virtual ~SRPRouter ();
   
-  void sendMessage(Ipv4Address ip);
-  void send2Peer();
+  void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
+  void send2Peer(Ptr<Packet> packet);
 
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;

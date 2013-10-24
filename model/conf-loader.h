@@ -9,6 +9,7 @@
 #include "ns3/node-container.h"
 #include "ns3/subnet.h"
 #include "ns3/srp-router-interface.h"
+#include "ns3/ipv4-address.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ namespace ns3{
 
 class NodeContainer;
 class SRPGrid;
+class Ipv4Address;
 
 class ConfLoader
 {
@@ -66,6 +68,13 @@ public:
   void clearLinkActions();*/
 
   void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
+  int getIndexBySubnet(Subnet subnet);
+  
+  map<Ipv4Address, int> getIpv4IndexMap();
+  void setIpv4IndexMap(map<Ipv4Address, int> m_map);
+  void addItem2Ipv4IndexMap(Ipv4Address ip, int index);
+  int getIndexByIpv4(Ipv4Address ip);
+
 private:
 	ConfLoader(){};
 	ConfLoader(ConfLoader const&){};
@@ -80,6 +89,8 @@ private:
 
   map<int, Subnet> index_subnet_map;
 
+  map<Ipv4Address, int> m_ipv4_index_map;
+  
   map<int, bool> nodeStates;
   map<pair<int,int>,bool> linkStates;
 

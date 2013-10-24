@@ -29,6 +29,8 @@
 #include "ns3/boolean.h"
 #include "ipv4-srp-routing.h"
 
+#include <sstream>
+
 NS_LOG_COMPONENT_DEFINE ("Ipv4SRPRouting");
 
 namespace ns3 {
@@ -127,7 +129,6 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
       else{
           destNode = v1_list.front();
       }
-
   }else if(v3_list.size()>0){
       if (m_randomEcmpRouting){
           destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
@@ -207,7 +208,17 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
   cout << m_id <<" receive a packet\t"<<header.GetSource() << "\t"<<header.GetDestination()<<endl;
-
+  SRPTag tag;
+  p->PeekPacketTag(tag);
+  vector<int> upList = tag.getUpList();
+  for(vector<int>::iterator it = upList.begin(); it!=upList.end(); ++it){
+      cout << *it << endl;
+  }
+  vector<int> downList = tag.getDownList();
+  for(vector<int>::iterator it = downList.begin(); it!=downList.end(); ++it){
+      cout << *it << endl;
+  }
+  //cout << ss.str() << endl;
   if (header.GetDestination ().IsMulticast ())
     {
       NS_LOG_LOGIC ("Multicast destination-- returning false");
