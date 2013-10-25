@@ -59,13 +59,13 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 
-void update(){
-  /*for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
-    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->updateNode();
-  }*/
-  //ConfLoader::Instance()->setNodeState(3,false);
-  //ConfLoader::Instance()->setNodeState(3,false);
+void action(){
+    ConfLoader::Instance()->setNodeState(0,false);
+    ConfLoader::Instance()->setNodeState(3,false);
+}
 
+void update(){
+  action();
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
       // if one SRP router found that Grid have changed, then there is no need to update others
@@ -236,7 +236,25 @@ main (int argc, char *argv[])
       for (uint32_t j = 1; j < m_ipv4->GetNInterfaces (); j++){
           Ipv4Address addr = m_ipv4->GetAddress (j, 0).GetLocal();
           ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
+          cout << addr << endl;
+          cout << i << endl;
       }
+  }
+
+  map<int, int> test;
+  test[1] = 1;
+  test[2] = 2;  
+  test[3] = 3;
+  test[4] = 1;
+  test[5] = 2;
+  test[6] = 3;
+  for(map<int,int>::iterator it = test.begin(); it != test.end(); ++it){
+      cout << it->first << " " << it->second << endl;
+  }
+  cout << ConfLoader::Instance()->getIpv4IndexMap().size() << endl;
+  cout << ConfLoader::Instance()->getIpv4IndexMap()[Ipv4Address("192.168.0.2")] << endl;
+  for(map<Ipv4Address, int>::iterator it = ConfLoader::Instance()->getIpv4IndexMap().begin() ; it!=ConfLoader::Instance()->getIpv4IndexMap().end() ; ++it){
+            cout << it->first << " " << it->second << endl;
   }
 
   NS_LOG_INFO ("Create Applications.");
@@ -244,8 +262,8 @@ main (int argc, char *argv[])
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                     //Address (InetSocketAddress ("10.0.3.2", port)));
-                      Address (InetSocketAddress ("192.168.0.6", port)));
+                    Address (InetSocketAddress ("10.0.3.2", port)));
+                    //Address (InetSocketAddress ("192.168.0.16", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node

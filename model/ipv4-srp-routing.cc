@@ -178,7 +178,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
-  cout << m_id <<" send a packet\t"<<header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  cout << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
 
   if (header.GetDestination ().IsMulticast ())
     {
@@ -214,17 +214,8 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-  cout << m_id <<" receive a packet\t"<<header.GetSource() << "\t"<<header.GetDestination()<<endl;
-  SRPTag tag;
-  p->PeekPacketTag(tag);
-  vector<int> upList = tag.getUpList();
-  for(vector<int>::iterator it = upList.begin(); it!=upList.end(); ++it){
-      cout << *it << endl;
-  }
-  vector<int> downList = tag.getDownList();
-  for(vector<int>::iterator it = downList.begin(); it!=downList.end(); ++it){
-      cout << *it << endl;
-  }
+  cout << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  
   //cout << ss.str() << endl;
   if (header.GetDestination ().IsMulticast ())
     {
@@ -240,9 +231,23 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
     }
 
   if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) || 
-          ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id){
+          (ConfLoader::Instance()->getIpv4IndexMap().count(header.GetDestination())>0 && 
+              ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id)){
       NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
       cout << "Destination match" << endl;
+      SRPTag tag;
+      p->PeekPacketTag(tag);
+      vector<int> upList = tag.getUpList();
+      cout << "tag start" << endl;
+      for(vector<int>::iterator it = upList.begin(); it!=upList.end(); ++it){
+          cout << *it << endl;
+      }
+      vector<int> downList = tag.getDownList();
+      for(vector<int>::iterator it = downList.begin(); it!=downList.end(); ++it){
+          cout << *it << endl;
+      }
+      cout << "tag stop" << endl;
+
       lcb (p, header, iif);
       return true;
   }

@@ -273,7 +273,7 @@ bool SRPRouter::update(){
   tag.setDownList(downList);
   Ptr<Packet> packet = Create<Packet>(3);
   packet->AddPacketTag(tag);
-  send2Peer(packet);
+  //send2Peer(packet);
   return true;
 }
 
