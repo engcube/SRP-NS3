@@ -41,7 +41,7 @@
 
 #include <cassert>
 
-#include "ns3/srp.h"
+//#include "ns3/srp.h"
 #include "ns3/conf-loader.h"
 #include "ns3/subnet.h"
 #include "ns3/srp-router-interface.h"
@@ -236,28 +236,19 @@ main (int argc, char *argv[])
       for (uint32_t j = 1; j < m_ipv4->GetNInterfaces (); j++){
           Ipv4Address addr = m_ipv4->GetAddress (j, 0).GetLocal();
           ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
-          cout << addr << endl;
-          cout << i << endl;
       }
   }
-
-  map<int, int> test;
-  test[1] = 1;
-  test[2] = 2;  
-  test[3] = 3;
-  test[4] = 1;
-  test[5] = 2;
-  test[6] = 3;
-  for(map<int,int>::iterator it = test.begin(); it != test.end(); ++it){
-      cout << it->first << " " << it->second << endl;
-  }
-  cout << ConfLoader::Instance()->getIpv4IndexMap().size() << endl;
-  cout << ConfLoader::Instance()->getIpv4IndexMap()[Ipv4Address("192.168.0.2")] << endl;
-  for(map<Ipv4Address, int>::iterator it = ConfLoader::Instance()->getIpv4IndexMap().begin() ; it!=ConfLoader::Instance()->getIpv4IndexMap().end() ; ++it){
+  /*map<Ipv4Address, int> tmpMap = ConfLoader::Instance()->getIpv4IndexMap();
+  cout << tmpMap.size() << endl;
+  for(map<Ipv4Address, int>::iterator it = tmpMap.begin() ; it!=tmpMap.end() ; ++it){
             cout << it->first << " " << it->second << endl;
   }
-
-  NS_LOG_INFO ("Create Applications.");
+//bug here!!!
+  for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
+	cout << it->first << " " << it->second << endl;
+	}
+*/
+	NS_LOG_INFO ("Create Applications.");
 
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
