@@ -59,7 +59,7 @@ SRPRoutingEntry::SRPRoutingEntry(Subnet& subnet, map<int, int>& nodeList){
     this->mNodeList = nodeList;
 }
 
-SRPRoutingEntry::SRPRoutingEntry(Ipv4Address& address, map<int, int>& nodeList){
+SRPRoutingEntry::SRPRoutingEntry(Ipv4Address address, map<int, int>& nodeList){
     this->mAddress = address;
     this->mType = true;
     this->mNodeList = nodeList;

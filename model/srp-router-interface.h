@@ -55,7 +55,7 @@ class SRPRoutingEntry{
 public:
     SRPRoutingEntry();
     SRPRoutingEntry(Subnet& subnet, map<int, int>& nodeList);
-    SRPRoutingEntry(Ipv4Address& address, map<int, int>& nodeList);
+    SRPRoutingEntry(Ipv4Address address, map<int, int>& nodeList);
     void removeNode(int index);
     void addNode(int index, int status);
     Subnet& getSubnet();
