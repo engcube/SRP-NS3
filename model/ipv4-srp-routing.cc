@@ -107,9 +107,18 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   int destNode = -1;
   map<int, int> nodeList;
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
-      nodeList = m_SRPGrid->getNodeListByID(ConfLoader::Instance()->getIpv4IndexMap()[dest]);
+      int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
+      if(node>=ConfLoader::Instance()->getCoreNum()&&node<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+          nodeList = m_SRPGrid->getNodeListByID(node);
+      }else{
+          
+      }
+
   }else{
     nodeList = m_SRPGrid->getNodeListByHost(dest);
+  }
+  for(map<int,int>::iterator it = nodeList.begin();it!=nodeList.end();++it){
+    cout<<it->first<<" "<<it->second<<endl;
   }
     //value = 1
     vector<int> v1_list;
@@ -143,6 +152,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
             destNode = v3_list.front();
         }
     }else{
+	cout << "no route found!" << endl;
         return 0;
     }
   

@@ -55,17 +55,22 @@ class SRPRoutingEntry{
 public:
     SRPRoutingEntry();
     SRPRoutingEntry(Subnet subnet, map<int, int> nodeList);
+    SRPRoutingEntry(Ipv4Address address, map<int, int> nodeList);
     void removeNode(int index);
     void addNode(int index, int status);
     Subnet getSubnet();
+    Ipv4Address getAddress();
     string getDescription();
+    bool getType();
     void setDescription(string desc);
     map<int, int> getNodeList();
     void setNodeList(map<int, int> mNodeList); 
     string toString();
     bool hasEffectSubnet();
 private:
+    bool mType; //true:subnet, false:Ipv4Address
     Subnet mSubnet;
+    Ipv4Address mAddress;
     map<int, int> mNodeList; 
     string m_description;
 };

@@ -60,8 +60,8 @@ using namespace std;
 NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 
 void action(){
-    ConfLoader::Instance()->setNodeState(0,false);
-    ConfLoader::Instance()->setNodeState(3,false);
+    //ConfLoader::Instance()->setNodeState(0,false);
+    //ConfLoader::Instance()->setNodeState(3,false);
 }
 
 void update(){
@@ -76,27 +76,6 @@ void update(){
   //ConfLoader::Instance()->clearLinkActions();
 }
 
-/*
-// ICMP echo packet
-  Ptr<Packet> p = Create<Packet>(); 
-  Icmpv4Echo echo; 
-  echo.SetSequenceNumber(m_Seq++); 
-  echo.SetIdentifier (0); 
-  Icmpv4Header icmpheader; 
-  icmpheader.SetType (Icmpv4Header::ECHO); 
-  icmpheader.SetCode(0); 
-  icmpheader.EnableChecksum(); 
-  Ipv4Header ipHeader; 
-  ipHeader.SetDestination(m_dstAddress); 
-  ipHeader.SetSource(m_srcAddress); 
-  ipHeader.SetProtocol(1); // ICMP 
-  ipHeader.SetPayloadSize(28); // 20+8 
-  ipHeader.SetTtl(16); 
-  ipHeader.EnableChecksum(); 
-  p->AddHeader(echo); 
-  p->AddHeader(icmpheader); 
-  p->AddHeader(ipHeader); 
-*/
 int 
 main (int argc, char *argv[])
 {
@@ -110,7 +89,6 @@ main (int argc, char *argv[])
   //LogComponentEnable ("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
 #endif
-
   int CORE_NUM = 2;
   int TOR_NUM = 4;
   int BORDER_NUM = 2;
@@ -253,8 +231,8 @@ main (int argc, char *argv[])
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                    Address (InetSocketAddress ("10.0.3.2", port)));
-                    //Address (InetSocketAddress ("192.168.0.16", port)));
+                    //Address (InetSocketAddress ("10.0.3.2", port)));
+                    Address (InetSocketAddress ("192.168.0.16", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node

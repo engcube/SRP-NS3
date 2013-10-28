@@ -230,6 +230,9 @@ void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
         Subnet subnet(0,0);
         SRPRoutingEntry entry(subnet, mmap);
         entry.setDescription("B_exit");
+        for(map<Ipv4Address, int>::iterator it = m_ipv4_index_map.begin(); it!=m_ipv4_index_map.end();++it){
+            
+        }
         mSRPGrid->addSRPGridEntry(entry);
 
     }

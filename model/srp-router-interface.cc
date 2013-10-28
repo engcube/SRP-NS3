@@ -55,6 +55,13 @@ SRPRoutingEntry::SRPRoutingEntry(){
 
 SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, map<int, int> nodeList){
     this->mSubnet = subnet;
+    this->mType = true;
+    this->mNodeList = nodeList;
+}
+
+SRPRoutingEntry::SRPRoutingEntry(Ipv4Address address, map<int, int> nodeList){
+    this->mAddress = address;
+    this->mType = true;
     this->mNodeList = nodeList;
 }
 
@@ -68,6 +75,14 @@ void SRPRoutingEntry::addNode(int index, int status){
 
 Subnet SRPRoutingEntry::getSubnet(){
     return this->mSubnet;
+}
+
+Ipv4Address SRPRoutingEntry::getAddress(){
+    return this->mAddress;
+}
+
+bool SRPRoutingEntry::getType(){
+    return this->mType;
 }
 
 map<int, int> SRPRoutingEntry::getNodeList(){
@@ -84,7 +99,11 @@ SRPGrid::SRPGrid(){
 
 string SRPRoutingEntry::toString(){
     stringstream ss;
-    ss << mSubnet.toString() << ":" << m_description << endl;
+    if(mType){
+        ss << mSubnet.toString() << ":" << m_description << endl;
+    }else{
+        ss << mAddress <<":"<<m_description<<endl;
+    }
     for(map<int, int>::iterator it = mNodeList.begin(); it!=mNodeList.end();++it){
         ss << it->first << ":" << it->second << "\t";
     }
@@ -157,6 +176,13 @@ map<int, int> SRPGrid::getNodeListByHost(Ipv4Address dest){
 }
 
 map<int, int> SRPGrid::getNodeListByID(int id){
+    cout << "subnet-index"<<endl;
+    map<int,Subnet> a = ConfLoader::Instance()->getIndexSubnetMap();
+    for(map<int,Subnet>::iterator it= a.begin();it!=a.end();++it){
+        cout << it->first << " "<<it->second.toString()<<endl;
+    } 
+    cout << "subnet-index end"<<endl;
+    cout << id << " " << ConfLoader::Instance()->getSubnetByID(id).toString()<<endl;
     for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
         if(it->getSubnet().equals(ConfLoader::Instance()->getSubnetByID(id))){
             return it->getNodeList();
@@ -273,7 +299,7 @@ bool SRPRouter::update(){
   tag.setDownList(downList);
   Ptr<Packet> packet = Create<Packet>(3);
   packet->AddPacketTag(tag);
-  //send2Peer(packet);
+  send2Peer(packet);
   return true;
 }
 
