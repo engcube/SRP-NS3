@@ -17,6 +17,8 @@ class Subnet
 {
 public:
 	Subnet();
+	Subnet(const Subnet& subnet);
+	Subnet& operator=(const Subnet &subnet);
 	Subnet(uint32_t address, int mask);
 	Subnet nextSubnet() const;
 	Subnet prevSubnet() const;

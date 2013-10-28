@@ -29,6 +29,17 @@ Subnet::Subnet(uint32_t address, int mask){
 	this->mask = mask_tmp;
 }
 
+Subnet::Subnet(const Subnet& subnet){
+	address = subnet.address;
+	mask = subnet.mask;
+}
+
+Subnet& Subnet::operator=(const Subnet &subnet){
+	address = subnet.address;
+	mask = subnet.mask;
+	return *this;
+}
+
 void Subnet::setAddress(uint32_t address){
 	this->address = address;
 }

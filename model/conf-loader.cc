@@ -57,19 +57,19 @@ int ConfLoader::getTotalNum() const{
 }
 
 
-map<int, Subnet> ConfLoader::getIndexSubnetMap() const{
+map<int, Subnet>& ConfLoader::getIndexSubnetMap(){
   return index_subnet_map;
 }
 
-void ConfLoader::addItem2IndexSubnetMap(int index, Subnet subnet){
+void ConfLoader::addItem2IndexSubnetMap(int index, Subnet& subnet){
   index_subnet_map[index] = subnet;
 }
 
-void ConfLoader::setNodeContainer(NodeContainer nc){
+void ConfLoader::setNodeContainer(NodeContainer& nc){
     m_nodes = nc;
 }
 
-NodeContainer ConfLoader::getNodeContainer(){
+NodeContainer& ConfLoader::getNodeContainer(){
     return m_nodes;
 }
 
@@ -90,7 +90,7 @@ int ConfLoader::getInterfaceIndex(int my, int to){
     return 0;
 }
 
-int ConfLoader::getIndexBySubnet(Subnet subnet){
+int ConfLoader::getIndexBySubnet(Subnet& subnet){
     for(map<int, Subnet>::iterator it = index_subnet_map.begin(); it!=index_subnet_map.end(); ++it){
         if (it->second.equals(subnet)){
             return it->first;
@@ -99,19 +99,19 @@ int ConfLoader::getIndexBySubnet(Subnet subnet){
     return -1;
 }
 
-map<int, bool> ConfLoader::getNodeStates(){
+map<int, bool>& ConfLoader::getNodeStates(){
     return this->nodeStates;
 }
 
-void ConfLoader::setNodeStates(map<int, bool> states){
+void ConfLoader::setNodeStates(map<int, bool>& states){
     this->nodeStates = states;
 }
 
-map<pair<int,int>,bool> ConfLoader::getLinkStates(){
+map<pair<int,int>,bool>& ConfLoader::getLinkStates(){
     return this->linkStates;
 }
 
-void ConfLoader::setLinkStates(map<pair<int,int>,bool> states){
+void ConfLoader::setLinkStates(map<pair<int,int>,bool>& states){
     this->linkStates = states;
 }
 
@@ -182,24 +182,24 @@ void ConfLoader::clearLinkActions(){
     this->linkActions.clear();
 }*/
 
-map<Ipv4Address, int> ConfLoader::getIpv4IndexMap(){
+map<Ipv4Address, int>& ConfLoader::getIpv4IndexMap(){
     return m_ipv4_index_map;
 }
 
-void ConfLoader::setIpv4IndexMap(map<Ipv4Address, int> m_map){
+void ConfLoader::setIpv4IndexMap(map<Ipv4Address, int>& m_map){
     m_ipv4_index_map = m_map;
 }
 
-void ConfLoader::addItem2Ipv4IndexMap(Ipv4Address ip, int index){
+void ConfLoader::addItem2Ipv4IndexMap(Ipv4Address& ip, int index){
     m_ipv4_index_map[ip] = index;
 }
 
-Subnet ConfLoader::getSubnetByID(int id){
+Subnet& ConfLoader::getSubnetByID(int id){
     return index_subnet_map[id];
 }
 
 
-int ConfLoader::getIndexByIpv4(Ipv4Address ip){
+int ConfLoader::getIndexByIpv4(Ipv4Address& ip){
     return m_ipv4_index_map[ip];
 }
 

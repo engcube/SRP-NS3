@@ -37,21 +37,21 @@ public:
   uint32_t getAddressStart() const;
 
 
-  map<int, Subnet> getIndexSubnetMap() const;
-  void addItem2IndexSubnetMap(int index, Subnet subnet);
+  map<int, Subnet>& getIndexSubnetMap();
+  void addItem2IndexSubnetMap(int index, Subnet& subnet);
 
-  void setNodeContainer(NodeContainer nc);
-  NodeContainer getNodeContainer();
+  void setNodeContainer(NodeContainer& nc);
+  NodeContainer& getNodeContainer();
   int getInterfaceIndex(int my, int to);
 
-  map<int, bool> getNodeStates();
-  void setNodeStates(map<int, bool> states);
+  map<int, bool>& getNodeStates();
+  void setNodeStates(map<int, bool>& states);
   void setNodeState(int i, bool state);
   bool getNodeState(int i);
   bool getLinkState(int i, int j);
 
-  map<pair<int,int>,bool> getLinkStates();
-  void setLinkStates(map<pair<int,int>,bool> states);
+  map<pair<int,int>,bool>& getLinkStates();
+  void setLinkStates(map<pair<int,int>,bool>& states);
   void setLinkState(int i, int j, bool state);
 
   /*map<int, bool> getNodeActions();
@@ -68,13 +68,13 @@ public:
   void clearLinkActions();*/
 
   void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
-  int getIndexBySubnet(Subnet subnet);
-  Subnet getSubnetByID(int id);
+  int getIndexBySubnet(Subnet& subnet);
+  Subnet& getSubnetByID(int id);
 
-  map<Ipv4Address, int> getIpv4IndexMap();
-  void setIpv4IndexMap(map<Ipv4Address, int> m_map);
-  void addItem2Ipv4IndexMap(Ipv4Address ip, int index);
-  int getIndexByIpv4(Ipv4Address ip);
+  map<Ipv4Address, int>& getIpv4IndexMap();
+  void setIpv4IndexMap(map<Ipv4Address, int>& m_map);
+  void addItem2Ipv4IndexMap(Ipv4Address& ip, int index);
+  int getIndexByIpv4(Ipv4Address& ip);
 
 private:
 	ConfLoader(){};
@@ -95,8 +95,8 @@ private:
   map<int, bool> nodeStates;
   map<pair<int,int>,bool> linkStates;
 
-  map<int, bool> nodeActions;
-  map<pair<int,int>,bool> linkActions;
+  //map<int, bool> nodeActions;
+  //map<pair<int,int>,bool> linkActions;
 
   int m_CoreNum;
   int m_ToRNum;

@@ -216,7 +216,8 @@ main (int argc, char *argv[])
           ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
       }
   }
-  /*map<Ipv4Address, int> tmpMap = ConfLoader::Instance()->getIpv4IndexMap();
+  /*
+  map<Ipv4Address, int> tmpMap = ConfLoader::Instance()->getIpv4IndexMap();
   cout << tmpMap.size() << endl;
   for(map<Ipv4Address, int>::iterator it = tmpMap.begin() ; it!=tmpMap.end() ; ++it){
             cout << it->first << " " << it->second << endl;
@@ -224,15 +225,15 @@ main (int argc, char *argv[])
 //bug here!!!
   for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
 	cout << it->first << " " << it->second << endl;
-	}
-*/
+	}*/
+
 	NS_LOG_INFO ("Create Applications.");
 
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
                     //Address (InetSocketAddress ("10.0.3.2", port)));
-                    Address (InetSocketAddress ("192.168.0.16", port)));
+                    Address (InetSocketAddress ("192.168.0.17", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node

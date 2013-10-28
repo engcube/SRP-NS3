@@ -53,13 +53,13 @@ SRPRoutingEntry::SRPRoutingEntry(){
 
 }
 
-SRPRoutingEntry::SRPRoutingEntry(Subnet subnet, map<int, int> nodeList){
+SRPRoutingEntry::SRPRoutingEntry(Subnet& subnet, map<int, int>& nodeList){
     this->mSubnet = subnet;
     this->mType = true;
     this->mNodeList = nodeList;
 }
 
-SRPRoutingEntry::SRPRoutingEntry(Ipv4Address address, map<int, int> nodeList){
+SRPRoutingEntry::SRPRoutingEntry(Ipv4Address& address, map<int, int>& nodeList){
     this->mAddress = address;
     this->mType = true;
     this->mNodeList = nodeList;
@@ -73,11 +73,11 @@ void SRPRoutingEntry::addNode(int index, int status){
     this->mNodeList[index] = status;
 }
 
-Subnet SRPRoutingEntry::getSubnet(){
+Subnet& SRPRoutingEntry::getSubnet(){
     return this->mSubnet;
 }
 
-Ipv4Address SRPRoutingEntry::getAddress(){
+Ipv4Address& SRPRoutingEntry::getAddress(){
     return this->mAddress;
 }
 
@@ -85,11 +85,11 @@ bool SRPRoutingEntry::getType(){
     return this->mType;
 }
 
-map<int, int> SRPRoutingEntry::getNodeList(){
+map<int, int>& SRPRoutingEntry::getNodeList(){
     return this->mNodeList;
 }
 
-void SRPRoutingEntry::setNodeList(map<int, int> nodeList){
+void SRPRoutingEntry::setNodeList(map<int, int>& nodeList){
     this->mNodeList = nodeList;
 }
 
@@ -148,11 +148,11 @@ vector<int> SRPGrid::getEffectSubnet(){
   return effcetSubnets;
 }
 
-void SRPGrid::addSRPGridEntry(SRPRoutingEntry entry){
+void SRPGrid::addSRPGridEntry(SRPRoutingEntry& entry){
     m_entries.push_back(entry);
 }
 
-void SRPGrid::removeSRPGridEntry(Subnet subnet){
+void SRPGrid::removeSRPGridEntry(Subnet& subnet){
     for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
         if(it->getSubnet().equals(subnet)){
             m_entries.erase(it);
@@ -161,11 +161,11 @@ void SRPGrid::removeSRPGridEntry(Subnet subnet){
     }
 }
 
-list<SRPRoutingEntry> SRPGrid::getSRPGrid(){
+list<SRPRoutingEntry>& SRPGrid::getSRPGrid(){
     return m_entries;
 }
 
-map<int, int> SRPGrid::getNodeListByHost(Ipv4Address dest){
+map<int, int> SRPGrid::getNodeListByHost(Ipv4Address& dest){
     for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
         if(it->getSubnet().contains(dest)){
             return it->getNodeList();

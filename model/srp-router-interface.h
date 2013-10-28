@@ -54,17 +54,17 @@ class Ipv4Address;
 class SRPRoutingEntry{
 public:
     SRPRoutingEntry();
-    SRPRoutingEntry(Subnet subnet, map<int, int> nodeList);
-    SRPRoutingEntry(Ipv4Address address, map<int, int> nodeList);
+    SRPRoutingEntry(Subnet& subnet, map<int, int>& nodeList);
+    SRPRoutingEntry(Ipv4Address& address, map<int, int>& nodeList);
     void removeNode(int index);
     void addNode(int index, int status);
-    Subnet getSubnet();
-    Ipv4Address getAddress();
+    Subnet& getSubnet();
+    Ipv4Address& getAddress();
     string getDescription();
     bool getType();
     void setDescription(string desc);
-    map<int, int> getNodeList();
-    void setNodeList(map<int, int> mNodeList); 
+    map<int, int>& getNodeList();
+    void setNodeList(map<int, int>& mNodeList); 
     string toString();
     bool hasEffectSubnet();
 private:
@@ -85,12 +85,12 @@ public:
     friend class SRPRoutingEntry;
     static TypeId GetTypeId (void);
     SRPGrid();
-    void addSRPGridEntry(SRPRoutingEntry entry);
-    void removeSRPGridEntry(Subnet subnet);
-    list<SRPRoutingEntry> getSRPGrid();
+    void addSRPGridEntry(SRPRoutingEntry& entry);
+    void removeSRPGridEntry(Subnet& subnet);
+    list<SRPRoutingEntry>& getSRPGrid();
     void setType(GridType type);
     string toString();
-    map<int, int> getNodeListByHost(Ipv4Address dest);
+    map<int, int> getNodeListByHost(Ipv4Address& dest);
     vector<int> getEffectSubnet();
     map<int, int> getNodeListByID(int id);
 private:
