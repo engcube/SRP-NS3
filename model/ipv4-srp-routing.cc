@@ -113,7 +113,6 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
       }else{
           
       }
-
   }else{
     nodeList = m_SRPGrid->getNodeListByHost(dest);
   }
