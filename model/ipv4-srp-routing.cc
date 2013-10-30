@@ -269,25 +269,33 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
       // TODO:  Forward broadcast
     }
 
-  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) || 
-          (ConfLoader::Instance()->getIpv4IndexMap().count(header.GetDestination())>0 && 
-              ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id)){
+  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) ){
       NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
       cout << "Destination match" << endl;
-      SRPTag tag;
-      p->PeekPacketTag(tag);
-      vector<int> upList = tag.getUpList();
-      cout << "tag start" << endl;
-      for(vector<int>::iterator it = upList.begin(); it!=upList.end(); ++it){
-          cout << *it << endl;
-      }
-      vector<int> downList = tag.getDownList();
-      for(vector<int>::iterator it = downList.begin(); it!=downList.end(); ++it){
-          cout << *it << endl;
-      }
-      cout << "tag stop" << endl;
+      //lcb (p, header, iif);
+      return true;
+  }
 
-      lcb (p, header, iif);
+  if(ConfLoader::Instance()->getIpv4IndexMap().count(header.GetDestination())>0 && 
+              ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id){
+      cout << "Destination match" << endl;
+      string ss = ConfLoader::Instance()->getUpdateMsgString();
+      int len = ss.size();
+      char str[len];
+      strcpy(str, ss.c_str());
+      uint8_t buffer[len];
+      p->CopyData (buffer, (const uint32_t)len);
+      bool needUpdate = false;
+      for(int i=0;i<5;i++){
+          if(buffer[i] != (uint8_t)str[i]){
+              needUpdate = true;
+              break;
+          }
+      }
+      if(needUpdate){
+          ConfLoader::Instance()->getNodeContainer().Get(m_id)->GetObject<SRPRouter>()->update();
+      }
+      //lcb (p, header, iif);
       return true;
   }
 

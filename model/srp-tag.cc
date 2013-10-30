@@ -26,7 +26,7 @@ void SRPTag::Deserialize (TagBuffer i){
 }
 
 void SRPTag::Print (std::ostream &os) const{
-	return;
+	os << "tag id is " << id << endl;
 }
 
 void SRPTag::setUpList(vector<int> list){

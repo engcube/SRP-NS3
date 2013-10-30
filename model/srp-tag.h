@@ -30,9 +30,13 @@ public:
    vector<int> getDownList();
    void add2DownList(int i);
 
+   void setID(int id){this->id = id;};
+   int getID(){return this->id;};
+
 private:
    vector<int> upList;
    vector<int> downList;
+   int id;
 };
 
 }

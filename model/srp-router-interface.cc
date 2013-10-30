@@ -204,6 +204,7 @@ SRPRouter::GetTypeId (void)
 SRPRouter::SRPRouter ()
 {
   NS_LOG_FUNCTION (this);
+  m_update_state = false;
   m_routerId.Set (Ipv4SRPRoutingHelper::AllocateRouterId ());
   //Time onInterval = Seconds (1.02);
   //Simulator::Schedule (onInterval, &update);
@@ -216,10 +217,15 @@ SRPRouter::~SRPRouter ()
 }
 
 bool SRPRouter::update(){
-  cout << "update  " << m_id << endl;
+  //cout << "<<<<in update  " << m_id << endl;
 
   if(!ConfLoader::Instance()->getNodeState(m_id)){
+      //cout << ">>>>out update with 1 false " << m_id << endl;
       return false;
+  }
+  if(this->m_update_state){
+      //cout << ">>>>out update with 1 true " << m_id << endl;
+      return true;
   }
   Ptr<SRPGrid> mGrid = CreateObject<SRPGrid> ();
   ConfLoader::Instance()->UpdateSRPGrid(m_id, mGrid);
@@ -229,6 +235,8 @@ bool SRPRouter::update(){
   vector<int> upList;
 
   m_routingProtocol->SetSRPGrid(mGrid);
+  
+  this->m_update_state = true;
 
   for(vector<int>::iterator curit=curList.begin(); curit!=curList.end(); ++curit){
       bool isExist = false;
@@ -256,15 +264,21 @@ bool SRPRouter::update(){
   }
 
   if(downList.size()==0&&upList.size()==0){
+      //cout << ">>>>out update with 2 false " << m_id << endl;
       return false;
   }
   //send
-  SRPTag tag;
-  tag.setUpList(upList);
-  tag.setDownList(downList);
-  Ptr<Packet> packet = Create<Packet>(3);
-  packet->AddPacketTag(tag);
+  //SRPTag tag;
+  //tag.setID(m_id);
+  
+  string ss = ConfLoader::Instance()->getUpdateMsgString();
+  int len = ss.size();
+  char str[len];
+  strcpy(str, ss.c_str());
+  Ptr<Packet> packet = Create<Packet>(reinterpret_cast<const uint8_t*>(str), (const uint32_t)len);
+  //packet->AddPacketTag(tag);
   send2Peer(packet);
+  //cout << ">>>>out update with 2  true " << m_id << endl;
   return true;
 }
 

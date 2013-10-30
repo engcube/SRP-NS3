@@ -77,8 +77,12 @@ public:
   void addItem2Ipv4IndexMap(Ipv4Address& ip, int index);
   int getIndexByIpv4(Ipv4Address& ip);
 
+  string getUpdateMsgString(){return UPDATE_MSG;};
 private:
-	ConfLoader(){};
+
+  string UPDATE_MSG;
+
+	ConfLoader(){UPDATE_MSG = "update!";};
 	ConfLoader(ConfLoader const&){};
 	//ConfLoader& operator=(ConfLoader const&){};
 	static ConfLoader* m_pInstance;
@@ -106,6 +110,7 @@ private:
   uint32_t m_AddressStart;
 
   NodeContainer m_nodes;
+
 };
 
 }

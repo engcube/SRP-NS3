@@ -64,15 +64,21 @@ int action_time = 0;
 void action(int time){
     //ConfLoader::Instance()->setNodeState(0,false);
     if(time == 1){
-        ConfLoader::Instance()->setNodeState(5,false);
+        ConfLoader::Instance()->setLinkState(0,3,false);
+        ConfLoader::Instance()->setLinkState(1,3,false);
     }else if(time == 2){
-        ConfLoader::Instance()->setNodeState(5,true);
+        ConfLoader::Instance()->setNodeState(5,false);
     }
 }
 
 void update(){
+  cout << "----------------update---------"<<endl;
   action_time ++;
   action(action_time);
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->resetUpdateState();
+  }
+
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
       // if one SRP router found that Grid have changed, then there is no need to update others

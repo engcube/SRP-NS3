@@ -142,8 +142,15 @@ public:
 
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
+  bool getUpdateState(){
+    return m_update_state;
+  };
+  void setUpdateState(){m_update_state = true;};
+  void resetUpdateState(){m_update_state = false;};
+
 private:
   int m_id;
+  bool m_update_state;
   virtual ~SRPRouter ();
   
   void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
