@@ -95,7 +95,7 @@ main (int argc, char *argv[])
   // Users may find it convenient to turn on explicit debugging
   // for selected modules; the below lines suggest how to do this
 #if 1
-  LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
+  //LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
   //LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
@@ -271,7 +271,7 @@ main (int argc, char *argv[])
   ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM));
 
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (1.01));
+  apps.Stop (Seconds (10));
   
   // Create a packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -280,7 +280,7 @@ main (int argc, char *argv[])
     apps = sink.Install (c.Get (i));
   }
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (1.01));
+  apps.Stop (Seconds (10));
 
   AsciiTraceHelper ascii;
   p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
