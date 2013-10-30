@@ -103,21 +103,51 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
-
   int destNode = -1;
   map<int, int> nodeList;
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
       int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
+      if(ConfLoader::Instance()->getNodeState(node)==false){
+          return 0;
+      }
       if(node>=ConfLoader::Instance()->getCoreNum()&&node<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
           nodeList = m_SRPGrid->getNodeListByID(node);
+      }else if(node<ConfLoader::Instance()->getCoreNum()){
+          if(m_id<ConfLoader::Instance()->getCoreNum()){
+              return 0;
+          }else if(m_id<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+              if(ConfLoader::Instance()->getLinkState(node,m_id)){
+                  nodeList[node] = 1;
+              }else{
+                  nodeList[node] = 0;
+              }
+          }else{
+              if(ConfLoader::Instance()->getLinkState(node,m_id)){
+                  nodeList[node] = 3;
+              }else{
+                  nodeList[node] = 2;
+              }
+          }
       }else{
-          
+        // may have bugs
+          if(m_id<ConfLoader::Instance()->getCoreNum()){
+              if(ConfLoader::Instance()->getLinkState(m_id,node)){
+                  nodeList[node] = 3;
+              }else{
+                  nodeList[node] = 2;
+              }
+          }else{
+              for(int j=0; j < ConfLoader::Instance()->getCoreNum(); j++){
+                  if(ConfLoader::Instance()->getNodeState(j) && ConfLoader::Instance()->getLinkState(j,m_id) && ConfLoader::Instance()->getLinkState(j,node)){
+                      nodeList[j] = 3;
+                  }else{
+                      nodeList[j]=2;
+                  }
+              }
+          }
       }
   }else{
     nodeList = m_SRPGrid->getNodeListByHost(dest);
-  }
-  for(map<int,int>::iterator it = nodeList.begin();it!=nodeList.end();++it){
-    cout<<it->first<<" "<<it->second<<endl;
   }
     //value = 1
     vector<int> v1_list;
@@ -151,9 +181,9 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
             destNode = v3_list.front();
         }
     }else{
-	cout << "no route found!" << endl;
+	      cout << "no route found!" << endl;
         return 0;
-  }
+    }
   
 
   NS_LOG_LOGIC ("Route Found to Node " << destNode);

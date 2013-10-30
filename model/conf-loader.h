@@ -39,6 +39,7 @@ public:
 
   map<int, Subnet>& getIndexSubnetMap();
   void addItem2IndexSubnetMap(int index, Subnet& subnet);
+  Ipv4Address getIpv4ByIndex(int index);
 
   void setNodeContainer(NodeContainer& nc);
   NodeContainer& getNodeContainer();

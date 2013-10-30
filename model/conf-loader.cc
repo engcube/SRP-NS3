@@ -203,6 +203,15 @@ int ConfLoader::getIndexByIpv4(Ipv4Address& ip){
     return m_ipv4_index_map[ip];
 }
 
+Ipv4Address ConfLoader::getIpv4ByIndex(int index){
+    for(map<Ipv4Address, int>::iterator it = m_ipv4_index_map.begin(); it!=m_ipv4_index_map.end(); ++it){
+        if (it->second == index){
+            return it->first;
+        }
+    }
+    return NULL;
+}
+
 void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
   //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();
   //cout << id << ":status:" << this->nodeStates[id] << endl;
@@ -257,21 +266,21 @@ void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
         }
 */
     }
-
     else if( id < m_CoreNum+m_ToRNum){ //ToR
-        
+
         for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
            if(i==id){
               continue;
            }
            map<int, int> mmap;
            for(int j=0; j < m_CoreNum; j++){
-            if(this->nodeStates[j] && getLinkState(j,id)){
-              mmap[j] = 1;
+            if(this->nodeStates[j] && getLinkState(j,id) && this->nodeStates[i] && getLinkState(j,i)){
+                mmap[j] = 1;
             }else{
                 mmap[j]=0;
             }
            }
+
            SRPRoutingEntry entry(index_subnet_map[i], mmap);
            mSRPGrid->addSRPGridEntry(entry);
         }
@@ -293,11 +302,11 @@ void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
         for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
            map<int, int> mmap;
            for(int j=0; j < m_CoreNum; j++){
-              if(this->nodeStates[j]&& getLinkState(j,id)){
+              if(this->nodeStates[j]&& getLinkState(j,id) && this->nodeStates[i]&& getLinkState(j,i)){
                 mmap[j] = 1;
               }else{
                 mmap[j]=0;
-            }
+              }
            }
            
            for(int j=m_CoreNum+m_ToRNum; j< getTotalNum(); j++){

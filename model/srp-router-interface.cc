@@ -176,13 +176,6 @@ map<int, int> SRPGrid::getNodeListByHost(Ipv4Address& dest){
 }
 
 map<int, int> SRPGrid::getNodeListByID(int id){
-    cout << "subnet-index"<<endl;
-    map<int,Subnet> a = ConfLoader::Instance()->getIndexSubnetMap();
-    for(map<int,Subnet>::iterator it= a.begin();it!=a.end();++it){
-        cout << it->first << " "<<it->second.toString()<<endl;
-    } 
-    cout << "subnet-index end"<<endl;
-    cout << id << " " << ConfLoader::Instance()->getSubnetByID(id).toString()<<endl;
     for(list<SRPRoutingEntry>::iterator it=m_entries.begin(); it != m_entries.end(); ++it){
         if(it->getSubnet().equals(ConfLoader::Instance()->getSubnetByID(id))){
             return it->getNodeList();
@@ -222,36 +215,6 @@ SRPRouter::~SRPRouter ()
   NS_LOG_FUNCTION (this);
 }
 
-/*void SRPRouter::updateNode(){
-  cout << "update Node" << m_id << endl;
-  if (ConfLoader::Instance()->getNodeActions().count(m_id)>0){
-      if(ConfLoader::Instance()->getNodeAction(m_id) && ConfLoader::Instance()->getNodeState(m_id)==false){
-          //send UP message
-          ConfLoader::Instance()->setNodeState(m_id, true);
-      }else if(ConfLoader::Instance()->getNodeAction(m_id) && ConfLoader::Instance()->getNodeState(m_id)==true){
-          //send DOWN message
-          ConfLoader::Instance()->setNodeState(m_id, false);
-      }
-  }
-}
-
-void SRPRouter::updateLink(){
-  cout << "update Link " << m_id << endl;
-  if(m_id < ConfLoader::Instance()->getCoreNum()){ //Core
-    for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum();i++){
-      if (ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,j))
-      {
-      }
-    }
-
-  }else if(m_id < ConfLoader::Instance()->getToRNum()){ //ToR
-
-  }else{ //Border
-
-  }
-}
-*/
-
 bool SRPRouter::update(){
   cout << "update  " << m_id << endl;
 
@@ -264,8 +227,9 @@ bool SRPRouter::update(){
   vector<int> curList = mGrid->getEffectSubnet();
   vector<int> downList;
   vector<int> upList;
+
   m_routingProtocol->SetSRPGrid(mGrid);
-  //cout << m_id << "Current Grid " << mGrid->toString() << endl;
+
   for(vector<int>::iterator curit=curList.begin(); curit!=curList.end(); ++curit){
       bool isExist = false;
       for(vector<int>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
@@ -290,6 +254,7 @@ bool SRPRouter::update(){
           downList.push_back(*lastit);
       }
   }
+
   if(downList.size()==0&&upList.size()==0){
       return false;
   }
@@ -304,31 +269,42 @@ bool SRPRouter::update(){
 }
 
 void SRPRouter::send2Peer(Ptr<Packet> packet){
-  if(m_id<ConfLoader::Instance()->getCoreNum()){
-      for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum(); i++){ 
+  int CORE = ConfLoader::Instance()->getCoreNum();
+  int TOR = ConfLoader::Instance()->getToRNum();
+  int BORDER = ConfLoader::Instance()->getBorderNum();
+
+  if(m_id<CORE){
+      //temperary ignore Border!
+      //for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum(); i++){ 
+      for(int i=CORE; i<CORE+TOR; i++){ 
           if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
-                sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
+                sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
+                //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                 //   ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
           }
       }
   }else{
-      for(int i=0; i<ConfLoader::Instance()->getCoreNum(); i++){
+      for(int i=0; i<CORE; i++){
           if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
-                sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
+                  sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
+
+                //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                //    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
           }
       }
-      if(m_id>=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
-          for(int i=ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i<ConfLoader::Instance()->getTotalNum(); i++){
+      if(m_id>=CORE+TOR){
+          for(int i=CORE+TOR; i<CORE+TOR+BORDER; i++){
               if(m_id>i){
                   if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
-                      sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                          ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
+                      sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
+                      //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                       //   ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
                   }
               }else if(m_id<i){
                   if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
-                      sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                          ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
+                      sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
+                     //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
+                      //    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
                   }
               }
           }

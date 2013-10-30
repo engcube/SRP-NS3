@@ -59,13 +59,20 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 
-void action(){
+int action_time = 0;
+
+void action(int time){
     //ConfLoader::Instance()->setNodeState(0,false);
-    //ConfLoader::Instance()->setNodeState(3,false);
+    if(time == 1){
+        ConfLoader::Instance()->setNodeState(5,false);
+    }else if(time == 2){
+        ConfLoader::Instance()->setNodeState(5,true);
+    }
 }
 
 void update(){
-  action();
+  action_time ++;
+  action(action_time);
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
       // if one SRP router found that Grid have changed, then there is no need to update others
@@ -136,6 +143,13 @@ main (int argc, char *argv[])
       ConfLoader::Instance()->addItem2IndexSubnetMap(i, s);
   }
 
+    cout << "subnet-index"<<endl;
+    map<int,Subnet> a = ConfLoader::Instance()->getIndexSubnetMap();
+    for(map<int,Subnet>::iterator it= a.begin();it!=a.end();++it){
+        cout << it->first << " "<<it->second.toString()<<endl;
+    } 
+    cout << "subnet-index end"<<endl;
+
   list<NodeContainer> nodeContainers;
 
   for(int i=0; i<CORE_NUM; i++){
@@ -172,6 +186,7 @@ main (int argc, char *argv[])
     }
   }
   ConfLoader::Instance()->setLinkStates(linkStates);
+  //ConfLoader::Instance()->setLinkState(0,4,false);
   //ConfLoader::Instance()->setLinkState(6,7,false);
 
   InternetStackHelper internet;
@@ -208,14 +223,24 @@ main (int argc, char *argv[])
       ipv4InterfaceContainers.push_back(ii);
   }
   
-  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+  /*for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
       Ptr<Ipv4> m_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
                           ->GetRoutingProtocol()->getIpv4();
       for (uint32_t j = 1; j < m_ipv4->GetNInterfaces (); j++){
           Ipv4Address addr = m_ipv4->GetAddress (j, 0).GetLocal();
           ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
       }
+  }*/
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+      Ipv4Address addr((uint32_t)i);
+      ConfLoader::Instance()->addItem2Ipv4IndexMap(addr,i);
   }
+  /*
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
+    Ptr<SRPGrid> mGrid = CreateObject<SRPGrid> ();
+    ConfLoader::Instance()->UpdateSRPGrid(i, mGrid);
+    c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->SetSRPGrid(mGrid);
+  }*/
   /*
   map<Ipv4Address, int> tmpMap = ConfLoader::Instance()->getIpv4IndexMap();
   cout << tmpMap.size() << endl;
@@ -223,17 +248,17 @@ main (int argc, char *argv[])
             cout << it->first << " " << it->second << endl;
   }
 //bug here!!!
-  for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
+  */for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
 	cout << it->first << " " << it->second << endl;
-	}*/
+	}
 
 	NS_LOG_INFO ("Create Applications.");
 
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                    //Address (InetSocketAddress ("10.0.3.2", port)));
-                    Address (InetSocketAddress ("192.168.0.17", port)));
+                     Address (InetSocketAddress ("10.0.2.2", port)));
+                    //Address (InetSocketAddress ("192.168.0.17", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
   //source: the first ToR node
