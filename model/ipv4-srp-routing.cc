@@ -103,6 +103,10 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
+  if(ConfLoader::Instance()->getNodeState(m_id)==false){
+      cout << "Node " << m_id << " down!" << endl;
+      return 0;
+  }
   int destNode = -1;
   map<int, int> nodeList;
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
@@ -155,9 +159,15 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
     vector<int> v3_list;
     for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
         if(it->second==1){
-            v1_list.push_back(it->first);
+            if((it->first > m_id && ConfLoader::Instance()->getLinkState(m_id, it->first)) 
+                || (it->first < m_id && ConfLoader::Instance()->getLinkState(it->first, m_id))){
+                v1_list.push_back(it->first);
+            }  
         }else if(it->second==3){
-            v3_list.push_back(it->first);
+            if((it->first > m_id && ConfLoader::Instance()->getLinkState(m_id, it->first)) 
+                || (it->first < m_id && ConfLoader::Instance()->getLinkState(it->first, m_id))){
+                v3_list.push_back(it->first);
+            }  
         }
     }
 
@@ -190,7 +200,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   int to_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(destNode, m_id);
   int my_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(m_id, destNode);
 
-  cout << "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface << endl;
+  //cout << "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface << endl;
 
   Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
 
@@ -251,6 +261,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
 { 
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev << &lcb << &ecb);
   // Check if input device supports IP
+
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
   cout << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;

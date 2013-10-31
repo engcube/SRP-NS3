@@ -65,9 +65,8 @@ void action(int time){
     //ConfLoader::Instance()->setNodeState(0,false);
     if(time == 1){
         ConfLoader::Instance()->setLinkState(0,3,false);
-        ConfLoader::Instance()->setLinkState(1,3,false);
     }else if(time == 2){
-        ConfLoader::Instance()->setNodeState(5,false);
+        ConfLoader::Instance()->setLinkState(0,3,true);
     }
 }
 
@@ -263,7 +262,7 @@ main (int argc, char *argv[])
   uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                     Address (InetSocketAddress ("10.0.2.2", port)));
+                     Address (InetSocketAddress ("10.0.1.2", port)));
                     //Address (InetSocketAddress ("192.168.0.17", port)));
 
   onoff.SetConstantRate (DataRate ("448kb/s"));
