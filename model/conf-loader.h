@@ -10,6 +10,7 @@
 #include "ns3/subnet.h"
 #include "ns3/srp-router-interface.h"
 #include "ns3/ipv4-address.h"
+#include "ns3/nstime.h"
 
 using namespace std;
 
@@ -82,6 +83,16 @@ public:
   void incrementLossPacketCounter(){ this->m_lossPacketCounter++;};
   int getLossPacketCounter(){ return this->m_lossPacketCounter;};
 
+  void setCurrentTime(Time time){
+    m_stopTime = time;
+    if(m_startTime.IsZero()){
+        m_startTime = time;
+    }
+  };
+
+  Time getDiffTime(){
+      return m_stopTime - m_startTime;
+  }
 private:
 
   string UPDATE_MSG;
@@ -117,6 +128,8 @@ private:
   uint32_t m_AddressStart;
 
   int m_lossPacketCounter;
+  Time m_startTime;
+  Time m_stopTime;
 
   NodeContainer m_nodes;
 

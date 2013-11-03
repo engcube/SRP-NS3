@@ -106,6 +106,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   if(ConfLoader::Instance()->getNodeState(m_id)==false){
       //cout << "Node " << m_id << " down!" << endl;
       ConfLoader::Instance()->incrementLossPacketCounter();
+      ConfLoader::Instance()->setCurrentTime(Simulator::Now());
       return 0;
   }
   int destNode = -1;
@@ -114,6 +115,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
       int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
       if(ConfLoader::Instance()->getNodeState(node)==false){      
           ConfLoader::Instance()->incrementLossPacketCounter();
+          ConfLoader::Instance()->setCurrentTime(Simulator::Now());
           return 0;
       }
       if(node>=ConfLoader::Instance()->getCoreNum()&&node<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
@@ -121,6 +123,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
       }else if(node<ConfLoader::Instance()->getCoreNum()){
           if(m_id<ConfLoader::Instance()->getCoreNum()){
               ConfLoader::Instance()->incrementLossPacketCounter();
+              ConfLoader::Instance()->setCurrentTime(Simulator::Now());
               return 0;
           }else if(m_id<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
               if(ConfLoader::Instance()->getLinkState(node,m_id)){
@@ -195,7 +198,8 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
         }
     }else{
 	      //cout << "no route found!" << endl;
-      ConfLoader::Instance()->incrementLossPacketCounter();
+        ConfLoader::Instance()->incrementLossPacketCounter();
+        ConfLoader::Instance()->setCurrentTime(Simulator::Now());
         return 0;
     }
   
