@@ -104,20 +104,23 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
   if(ConfLoader::Instance()->getNodeState(m_id)==false){
-      cout << "Node " << m_id << " down!" << endl;
+      //cout << "Node " << m_id << " down!" << endl;
+      ConfLoader::Instance()->incrementLossPacketCounter();
       return 0;
   }
   int destNode = -1;
   map<int, int> nodeList;
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
       int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
-      if(ConfLoader::Instance()->getNodeState(node)==false){
+      if(ConfLoader::Instance()->getNodeState(node)==false){      
+          ConfLoader::Instance()->incrementLossPacketCounter();
           return 0;
       }
       if(node>=ConfLoader::Instance()->getCoreNum()&&node<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
           nodeList = m_SRPGrid->getNodeListByID(node);
       }else if(node<ConfLoader::Instance()->getCoreNum()){
           if(m_id<ConfLoader::Instance()->getCoreNum()){
+              ConfLoader::Instance()->incrementLossPacketCounter();
               return 0;
           }else if(m_id<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
               if(ConfLoader::Instance()->getLinkState(node,m_id)){
@@ -191,7 +194,8 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
             destNode = v3_list.front();
         }
     }else{
-	      cout << "no route found!" << endl;
+	      //cout << "no route found!" << endl;
+      ConfLoader::Instance()->incrementLossPacketCounter();
         return 0;
     }
   
@@ -227,7 +231,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
-  cout << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  //cout << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
 
   if (header.GetDestination ().IsMulticast ())
     {
@@ -264,7 +268,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
 
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-  cout << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  //cout << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
   
   //cout << ss.str() << endl;
   if (header.GetDestination ().IsMulticast ())
@@ -282,14 +286,14 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
 
   if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) ){
       NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
-      cout << "Destination match" << endl;
+      //cout << "Destination match" << endl;
       //lcb (p, header, iif);
       return true;
   }
 
   if(ConfLoader::Instance()->getIpv4IndexMap().count(header.GetDestination())>0 && 
               ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id){
-      cout << "Destination match" << endl;
+      //cout << "Destination match" << endl;
       string ss = ConfLoader::Instance()->getUpdateMsgString();
       int len = ss.size();
       char str[len];

@@ -78,11 +78,18 @@ public:
   int getIndexByIpv4(Ipv4Address& ip);
 
   string getUpdateMsgString(){return UPDATE_MSG;};
+
+  void incrementLossPacketCounter(){ this->m_lossPacketCounter++;};
+  int getLossPacketCounter(){ return this->m_lossPacketCounter;};
+
 private:
 
   string UPDATE_MSG;
 
-	ConfLoader(){UPDATE_MSG = "update!";};
+	ConfLoader(){
+    UPDATE_MSG = "update!";
+    m_lossPacketCounter = 0;
+  };
 	ConfLoader(ConfLoader const&){};
 	//ConfLoader& operator=(ConfLoader const&){};
 	static ConfLoader* m_pInstance;
@@ -108,6 +115,8 @@ private:
   int m_BorderNum;
   int m_SubnetMask;
   uint32_t m_AddressStart;
+
+  int m_lossPacketCounter;
 
   NodeContainer m_nodes;
 

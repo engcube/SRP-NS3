@@ -65,13 +65,13 @@ void action(int time){
     //ConfLoader::Instance()->setNodeState(0,false);
     if(time == 1){
         ConfLoader::Instance()->setLinkState(0,3,false);
-    }else if(time == 2){
+    }else if(time == 3){
         ConfLoader::Instance()->setLinkState(0,3,true);
     }
 }
 
 void update(){
-  cout << "----------------update---------"<<endl;
+  //cout << "----------------update---------"<<endl;
   action_time ++;
   action(action_time);
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
@@ -208,8 +208,8 @@ main (int argc, char *argv[])
   // We create the channels first without any IP addressing information
   NS_LOG_INFO ("Create channels.");
   PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("0.5Mbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("200ms"));
+  p2p.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   
   list<NetDeviceContainer> netDeviceContainers;
   for(list<NodeContainer>::iterator it= nodeContainers.begin(); it!=nodeContainers.end(); ++it){
@@ -253,9 +253,9 @@ main (int argc, char *argv[])
             cout << it->first << " " << it->second << endl;
   }
 //bug here!!!
-  */for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
+  for(map<Ipv4Address, int>::iterator it=ConfLoader::Instance()->getIpv4IndexMap().begin();it!=ConfLoader::Instance()->getIpv4IndexMap().end();++it){
 	cout << it->first << " " << it->second << endl;
-	}
+	}*/
 
 	NS_LOG_INFO ("Create Applications.");
 
@@ -265,12 +265,12 @@ main (int argc, char *argv[])
                      Address (InetSocketAddress ("10.0.1.2", port)));
                     //Address (InetSocketAddress ("192.168.0.17", port)));
 
-  onoff.SetConstantRate (DataRate ("448kb/s"));
+  onoff.SetConstantRate (DataRate ("512kb/s"));
   //source: the first ToR node
   ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM));
 
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (10));
+  apps.Stop (Seconds (20));
   
   // Create a packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -279,7 +279,7 @@ main (int argc, char *argv[])
     apps = sink.Install (c.Get (i));
   }
   apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (10));
+  apps.Stop (Seconds (20));
 
   AsciiTraceHelper ascii;
   p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
@@ -297,7 +297,7 @@ main (int argc, char *argv[])
       cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
   }
 
-  int simulateTime = 11;
+  int simulateTime = 20;
   int simulateInterval = 3;
   for(int i=1; i<simulateTime/simulateInterval;i++){
     Time onInterval = Seconds (i*simulateInterval);
@@ -317,7 +317,7 @@ main (int argc, char *argv[])
 
   Simulator::Destroy ();
   
-
+  cout << "Lost packet: " << ConfLoader::Instance()->getLossPacketCounter() << endl;
 
   return 0;
 }
