@@ -218,6 +218,7 @@ SRPRouter::~SRPRouter ()
 
 bool SRPRouter::update(){
   //cout << "<<<<in update  " << m_id << endl;
+  //cout << "update  " << m_id << endl;
 
   if(!ConfLoader::Instance()->getNodeState(m_id)){
       //cout << ">>>>out update with 1 false " << m_id << endl;

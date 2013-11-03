@@ -53,6 +53,7 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/flow-monitor-helper.h"
+#include "ns3/nstime.h"
 
 using namespace ns3;
 using namespace std;
@@ -64,20 +65,25 @@ int action_time = 0;
 void action(int time){
     //ConfLoader::Instance()->setNodeState(0,false);
     if(time == 1){
-        ConfLoader::Instance()->setLinkState(0,3,false);
+        ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,false);
+        //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
+        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->update();
+
     }else if(time == 3){
-        ConfLoader::Instance()->setLinkState(0,3,true);
+        ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,true);
+        //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
+        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->update();
     }
 }
 
 void update(){
   //cout << "----------------update---------"<<endl;
   action_time ++;
-  action(action_time);
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->resetUpdateState();
   }
-
+  action(action_time);
+  
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
     if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
       // if one SRP router found that Grid have changed, then there is no need to update others
@@ -208,8 +214,8 @@ main (int argc, char *argv[])
   // We create the channels first without any IP addressing information
   NS_LOG_INFO ("Create channels.");
   PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("0ms"));
   
   list<NetDeviceContainer> netDeviceContainers;
   for(list<NodeContainer>::iterator it= nodeContainers.begin(); it!=nodeContainers.end(); ++it){
@@ -265,9 +271,9 @@ main (int argc, char *argv[])
                      Address (InetSocketAddress ("10.0.1.2", port)));
                     //Address (InetSocketAddress ("192.168.0.17", port)));
 
-  onoff.SetConstantRate (DataRate ("512kb/s"));
+  onoff.SetConstantRate (DataRate ("51200kb/s"));
   //source: the first ToR node
-  ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM));
+  ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM+3));
 
   apps.Start (Seconds (1.0));
   apps.Stop (Seconds (20));
@@ -318,6 +324,6 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   
   cout << "Lost packet: " << ConfLoader::Instance()->getLossPacketCounter() << endl;
-
+  cout << ConfLoader::Instance()->getDiffTime() << endl;
   return 0;
 }

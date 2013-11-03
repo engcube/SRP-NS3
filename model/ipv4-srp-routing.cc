@@ -113,7 +113,8 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   map<int, int> nodeList;
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
       int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
-      if(ConfLoader::Instance()->getNodeState(node)==false){      
+      if(ConfLoader::Instance()->getNodeState(node)==false){    
+          //cout << "Node " << node << " down!" << endl;  
           ConfLoader::Instance()->incrementLossPacketCounter();
           ConfLoader::Instance()->setCurrentTime(Simulator::Now());
           return 0;
@@ -122,6 +123,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
           nodeList = m_SRPGrid->getNodeListByID(node);
       }else if(node<ConfLoader::Instance()->getCoreNum()){
           if(m_id<ConfLoader::Instance()->getCoreNum()){
+              //cout << "Invaild path from " << m_id << " to " << node << endl;
               ConfLoader::Instance()->incrementLossPacketCounter();
               ConfLoader::Instance()->setCurrentTime(Simulator::Now());
               return 0;
