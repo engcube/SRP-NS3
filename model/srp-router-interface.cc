@@ -204,7 +204,7 @@ SRPRouter::GetTypeId (void)
 SRPRouter::SRPRouter ()
 {
   NS_LOG_FUNCTION (this);
-  m_update_state = false;
+  //m_update_state = false;
   m_routerId.Set (Ipv4SRPRoutingHelper::AllocateRouterId ());
   //Time onInterval = Seconds (1.02);
   //Simulator::Schedule (onInterval, &update);
@@ -215,7 +215,7 @@ SRPRouter::~SRPRouter ()
 {
   NS_LOG_FUNCTION (this);
 }
-
+/*
 bool SRPRouter::update(){
   //cout << "<<<<in update  " << m_id << endl;
   //cout << "update  " << m_id << endl;
@@ -332,7 +332,7 @@ void SRPRouter::sendMessage(Ipv4Address ip, Ptr<Packet> packet){
   m_socket->Bind ();
   m_socket->Connect (Address (InetSocketAddress (ip, 9)));
   m_socket->Send (packet);
-}
+}*/
 
 void 
 SRPRouter::SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing)

@@ -111,11 +111,22 @@ public:
 
   void SetSRPGrid(Ptr<SRPGrid> grid);
   Ptr<SRPGrid> GetSRPGrid (void);
+  bool update();
+  
+  bool getUpdateState(){
+    return m_update_state;
+  };
+  void setUpdateState(){m_update_state = true;};
+  void resetUpdateState(){m_update_state = false;};
 
 protected:
   void DoDispose (void);
 
 private:
+  void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
+  void send2Peer(Ptr<Packet> packet);
+  bool m_update_state;
+
   //Ptr<SRPRouter> m_router;
   Ptr<SRPGrid> m_SRPGrid;
 

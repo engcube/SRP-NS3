@@ -124,7 +124,7 @@ public:
 
   /*void updateNode();
   void updateLink();*/
-  bool update();
+  //bool update();
 
   void SetRoutingProtocol (Ptr<Ipv4SRPRouting> routing);
   Ptr<Ipv4SRPRouting> GetRoutingProtocol (void);
@@ -142,19 +142,19 @@ public:
 
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
-  bool getUpdateState(){
+  /*bool getUpdateState(){
     return m_update_state;
   };
   void setUpdateState(){m_update_state = true;};
-  void resetUpdateState(){m_update_state = false;};
+  void resetUpdateState(){m_update_state = false;};*/
 
 private:
   int m_id;
-  bool m_update_state;
+  //bool m_update_state;
   virtual ~SRPRouter ();
   
-  void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
-  void send2Peer(Ptr<Packet> packet);
+  //void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
+  //void send2Peer(Ptr<Packet> packet);
 
   Ipv4Address m_routerId;
   Ptr<Ipv4SRPRouting> m_routingProtocol;

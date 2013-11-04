@@ -67,12 +67,11 @@ void action(int time){
     if(time == 1){
         ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,false);
         //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
-        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->update();
-
+        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->GetRoutingProtocol()->update();
     }else if(time == 3){
         ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,true);
         //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
-        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->update();
+        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->GetRoutingProtocol()->update();
     }
 }
 
@@ -80,12 +79,12 @@ void update(){
   //cout << "----------------update---------"<<endl;
   action_time ++;
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
-    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->resetUpdateState();
+    ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->resetUpdateState();
   }
   action(action_time);
   
   for(int i=0; i<ConfLoader::Instance()->getTotalNum();i++){
-    if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->update()){
+    if(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->update()){
       // if one SRP router found that Grid have changed, then there is no need to update others
       break;
     }
@@ -112,6 +111,18 @@ main (int argc, char *argv[])
   int BORDER_NUM = 2;
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
+
+
+  float app_start_time = 1.0;
+  float app_stop_time = 5.0;
+  string dataRate = "10Mbps";//"1Gbps";
+  string delay = "0ms";
+  string dest_ip = "10.0.1.2";
+  string sendRate = "1Mb/s";//"100Mb/s";
+  uint16_t port = 9;   // Discard port (RFC 863)
+  int sendNode = CORE_NUM+3;
+  int simulateTime = (int)app_stop_time;
+  int simulateInterval = 3;
 
   ConfLoader::Instance()->setCoreNum(CORE_NUM);
   ConfLoader::Instance()->setToRNum(TOR_NUM);
@@ -154,12 +165,12 @@ main (int argc, char *argv[])
       ConfLoader::Instance()->addItem2IndexSubnetMap(i, s);
   }
 
-    cout << "subnet-index"<<endl;
+   /* cout << "subnet-index"<<endl;
     map<int,Subnet> a = ConfLoader::Instance()->getIndexSubnetMap();
     for(map<int,Subnet>::iterator it= a.begin();it!=a.end();++it){
         cout << it->first << " "<<it->second.toString()<<endl;
     } 
-    cout << "subnet-index end"<<endl;
+    cout << "subnet-index end"<<endl;*/
 
   list<NodeContainer> nodeContainers;
 
@@ -214,8 +225,8 @@ main (int argc, char *argv[])
   // We create the channels first without any IP addressing information
   NS_LOG_INFO ("Create channels.");
   PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("0ms"));
+  p2p.SetDeviceAttribute ("DataRate", StringValue (dataRate));
+  p2p.SetChannelAttribute ("Delay", StringValue (delay));
   
   list<NetDeviceContainer> netDeviceContainers;
   for(list<NodeContainer>::iterator it= nodeContainers.begin(); it!=nodeContainers.end(); ++it){
@@ -265,18 +276,17 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create Applications.");
 
-  uint16_t port = 9;   // Discard port (RFC 863)
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      //Address (InetSocketAddress (ipv4InterfaceContainers.back().GetAddress (1), port)));
-                     Address (InetSocketAddress ("10.0.1.2", port)));
+                     Address (InetSocketAddress (dest_ip.c_str(), port)));
                     //Address (InetSocketAddress ("192.168.0.17", port)));
 
-  onoff.SetConstantRate (DataRate ("51200kb/s"));
+  onoff.SetConstantRate (DataRate (sendRate));
   //source: the first ToR node
-  ApplicationContainer apps = onoff.Install (c.Get (CORE_NUM+3));
+  ApplicationContainer apps = onoff.Install (c.Get (sendNode));
 
-  apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (20));
+  apps.Start (Seconds (app_start_time));
+  apps.Stop (Seconds (app_stop_time));
   
   // Create a packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -284,8 +294,8 @@ main (int argc, char *argv[])
   for(int i=CORE_NUM; i< CORE_NUM+TOR_NUM;i++){  
     apps = sink.Install (c.Get (i));
   }
-  apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (20));
+  apps.Start (Seconds (app_start_time));
+  apps.Stop (Seconds (app_stop_time));
 
   AsciiTraceHelper ascii;
   p2p.EnableAsciiAll (ascii.CreateFileStream ("simple-SRP-routing.tr"));
@@ -303,8 +313,6 @@ main (int argc, char *argv[])
       cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
   }
 
-  int simulateTime = 20;
-  int simulateInterval = 3;
   for(int i=1; i<simulateTime/simulateInterval;i++){
     Time onInterval = Seconds (i*simulateInterval);
     Simulator::Schedule (onInterval, &update);
