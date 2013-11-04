@@ -18,13 +18,6 @@
 //
 // Network topology
 //
-//  n0
-//     \ 5 Mb/s, 2ms
-//      \          1.5Mb/s, 10ms
-//       n2 -------------------------n3
-//      /
-//     / 5 Mb/s, 2ms
-//   n1
 //
 // - all links are point-to-point links with indicated one-way BW/delay
 // - CBR/UDP flows from n0 to n3, and from n3 to n1
@@ -63,15 +56,13 @@ NS_LOG_COMPONENT_DEFINE ("SimpleSRPRoutingExample");
 int action_time = 0;
 
 void action(int time){
-    //ConfLoader::Instance()->setNodeState(0,false);
     if(time == 1){
+        NS_LOG_INFO("Down link");
         ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,false);
-        //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
-        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->GetRoutingProtocol()->update();
     }else if(time == 3){
+        NS_LOG_INFO("Up link");
         ConfLoader::Instance()->setLinkState(0,ConfLoader::Instance()->getCoreNum()+1,true);
-        //ConfLoader::Instance()->getNodeContainer().Get(ConfLoader::Instance()->getCoreNum()+1)->GetObject<SRPRouter>()->update();
-        //ConfLoader::Instance()->getNodeContainer().Get(0)->GetObject<SRPRouter>()->GetRoutingProtocol()->update();
+       
     }
 }
 
@@ -99,10 +90,10 @@ main (int argc, char *argv[])
   // Users may find it convenient to turn on explicit debugging
   // for selected modules; the below lines suggest how to do this
 #if 1
-  //LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
+  LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
-  //LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_ALL);
+  LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_DEBUG);
   //LogComponentEnable ("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
 #endif
@@ -114,7 +105,7 @@ main (int argc, char *argv[])
 
 
   float app_start_time = 1.0;
-  float app_stop_time = 5.0;
+  float app_stop_time = 25.0;
   string dataRate = "10Mbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";

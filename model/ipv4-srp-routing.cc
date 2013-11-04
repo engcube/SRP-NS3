@@ -103,7 +103,7 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 
 bool Ipv4SRPRouting::update(){
   //cout << "<<<<in update  " << m_id << endl;
-  //cout << "update  " << m_id << endl;
+  NS_LOG_DEBUG( "update  " << m_id );
 
   if(!ConfLoader::Instance()->getNodeState(m_id)){
       //cout << ">>>>out update with 1 false " << m_id << endl;
@@ -121,6 +121,7 @@ bool Ipv4SRPRouting::update(){
   vector<int> upList;
 
   this->m_SRPGrid = mGrid;
+  NS_LOG_DEBUG( "update  " << m_id << " Grid" );
   
   this->m_update_state = true;
 
@@ -223,9 +224,10 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
   if(ConfLoader::Instance()->getNodeState(m_id)==false){
-      //cout << "Node " << m_id << " down!" << endl;
+      NS_LOG_DEBUG( "Node " << m_id << " down!" );
       ConfLoader::Instance()->incrementLossPacketCounter();
       ConfLoader::Instance()->setCurrentTime(Simulator::Now());
+      //this->update();
       return 0;
   }
   int destNode = -1;
@@ -233,7 +235,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
       int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
       if(ConfLoader::Instance()->getNodeState(node)==false){    
-          //cout << "Node " << node << " down!" << endl;  
+          NS_LOG_DEBUG( "Node " << node << " down!");  
           ConfLoader::Instance()->incrementLossPacketCounter();
           ConfLoader::Instance()->setCurrentTime(Simulator::Now());
           return 0;
@@ -242,7 +244,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
           nodeList = m_SRPGrid->getNodeListByID(node);
       }else if(node<ConfLoader::Instance()->getCoreNum()){
           if(m_id<ConfLoader::Instance()->getCoreNum()){
-              //cout << "Invaild path from " << m_id << " to " << node << endl;
+              NS_LOG_DEBUG( "Invaild path from " << m_id << " to " << node);
               ConfLoader::Instance()->incrementLossPacketCounter();
               ConfLoader::Instance()->setCurrentTime(Simulator::Now());
               return 0;
@@ -318,7 +320,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
             destNode = v3_list.front();
         }
     }else{
-	      //cout << "no route found!" << endl;
+	      NS_LOG_DEBUG( "no route found!");
         ConfLoader::Instance()->incrementLossPacketCounter();
         ConfLoader::Instance()->setCurrentTime(Simulator::Now());
         return 0;
@@ -329,7 +331,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
   int to_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(destNode, m_id);
   int my_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(m_id, destNode);
 
-  //cout << "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface << endl;
+  NS_LOG_DEBUG( "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface);
 
   Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
 
@@ -356,7 +358,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
 //
-  //cout << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination());
 
   if (header.GetDestination ().IsMulticast ())
     {
@@ -393,7 +395,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
 
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
-  //cout << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination()<<endl;
+  NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() );
   
   //cout << ss.str() << endl;
   if (header.GetDestination ().IsMulticast ())
