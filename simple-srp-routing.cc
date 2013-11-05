@@ -97,8 +97,8 @@ main (int argc, char *argv[])
   //LogComponentEnable ("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
 #endif
-  int CORE_NUM = 2;
-  int TOR_NUM = 4;
+  int CORE_NUM = 4;
+  int TOR_NUM = 10;
   int BORDER_NUM = 2;
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
