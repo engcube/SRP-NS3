@@ -109,12 +109,13 @@ main (int argc, char *argv[])
   string dataRate = "100Mbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";
-  string sendRate = "10Mb/s";//"100Mb/s";
+  string sendRate = "1Mb/s";//"100Mb/s";
   uint16_t port = 9;   // Discard port (RFC 863)
   int sendNode = CORE_NUM+3;
   int simulateTime = (int)app_stop_time;
   int simulateInterval = 3;
-
+  uint32_t packetSize = 512;
+  
   ConfLoader::Instance()->setCoreNum(CORE_NUM);
   ConfLoader::Instance()->setToRNum(TOR_NUM);
   ConfLoader::Instance()->setBorderNum(BORDER_NUM);
@@ -272,7 +273,7 @@ main (int argc, char *argv[])
                      Address (InetSocketAddress (dest_ip.c_str(), port)));
                     //Address (InetSocketAddress ("192.168.0.17", port)));
 
-  onoff.SetConstantRate (DataRate (sendRate));
+  onoff.SetConstantRate (DataRate (sendRate), packetSize);
   //source: the first ToR node
   ApplicationContainer apps = onoff.Install (c.Get (sendNode));
 

@@ -93,6 +93,7 @@ public:
   Time getDiffTime(){
       return m_stopTime - m_startTime;
   }
+
 private:
 
   string UPDATE_MSG;

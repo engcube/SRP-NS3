@@ -362,7 +362,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
 // have a route, then send the packet down each of the specified interfaces.
 //
   NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination());
-  
+  //cout << Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() << endl;
   //Time time = Seconds(0.05);
   //Simulator::Schedule(time, &send, header, sockerr);
 

@@ -40,6 +40,7 @@
 #include "ipv4-interface.h"
 #include "ipv4-raw-socket-impl.h"
 
+#include "ns3/random-variable-stream.h"
 #include <iostream>
 using namespace std;
 
@@ -516,7 +517,12 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
     }
 
   NS_ASSERT_MSG (m_routingProtocol != 0, "Need a routing protocol object to process packets");
-  Simulator::Schedule(Seconds (0.08), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
+
+  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  uint32_t num = x->GetInteger(5,400);
+  //cout << "Random " << num << endl;
+  num = 0;
+  Simulator::Schedule(MilliSeconds (num), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
 
   /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
                                       MakeCallback (&Ipv4L3Protocol::IpForward, this),
@@ -734,7 +740,6 @@ void Ipv4L3Protocol::DelaySend(Ptr<Ipv4Route> newRoute, Ipv4Header ipHeader, Ptr
       NS_LOG_WARN ("No route to host.  Drop.");
       m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), 0);
     }
-  cout << Simulator::Now() << " Delay Send" << endl;
 }
 
 // XXX when should we set ip_id?   check whether we are incrementing
