@@ -90,7 +90,7 @@ main (int argc, char *argv[])
   // Users may find it convenient to turn on explicit debugging
   // for selected modules; the below lines suggest how to do this
 #if 1
-  LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
+  //LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
   //LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_DEBUG);
@@ -126,6 +126,9 @@ main (int argc, char *argv[])
   cout << "ToR number:" << ConfLoader::Instance()->getToRNum() << endl;
   cout << "Border number:" << ConfLoader::Instance()->getBorderNum() << endl;
   cout << "Netmask number:" << ConfLoader::Instance()->getSubnetMask() << endl;
+
+  cout << "Send Rate: " << sendRate << endl;
+  cout << "PacketSize: " << packetSize << endl;
 
   // Set up some default values for the simulation.  Use the 
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (210));
@@ -300,11 +303,11 @@ main (int argc, char *argv[])
     {
       flowmon = flowmonHelper.InstallAll ();
     }
-  
+ /* 
   for(int i=0; i<ConfLoader::Instance()->getTotalNum(); i++){
       cout << i << "  " << c.Get(i)->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid()->toString() << endl;
   }
-
+*/
   for(int i=1; i<simulateTime/simulateInterval;i++){
     Time onInterval = Seconds (i*simulateInterval);
     Simulator::Schedule (onInterval, &update);

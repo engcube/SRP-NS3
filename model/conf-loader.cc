@@ -22,7 +22,6 @@ ConfLoader* ConfLoader::Instance(){
 
 void ConfLoader::setCoreNum(int num){
     m_CoreNum = num;
-    cout << "Core " << m_CoreNum << endl;
 }
 void ConfLoader::setToRNum(int num){
     m_ToRNum = num;

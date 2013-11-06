@@ -521,7 +521,7 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
   Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
   uint32_t num = x->GetInteger(5,400);
   //cout << "Random " << num << endl;
-  num = 0;
+  num = 50;
   Simulator::Schedule(MilliSeconds (num), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
 
   /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
