@@ -542,7 +542,7 @@ void Ipv4L3Protocol::DelayReceive(Ptr<Packet> packet, Ipv4Header ipHeader, Ptr<N
       m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), interface);
     }
 
-    cout << Simulator::Now() << " Delay Receive" << endl;
+    //cout << Simulator::Now() << " Delay Receive" << endl;
 }
 
 
