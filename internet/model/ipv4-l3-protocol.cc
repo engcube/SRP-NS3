@@ -40,6 +40,9 @@
 #include "ipv4-interface.h"
 #include "ipv4-raw-socket-impl.h"
 
+#include <iostream>
+using namespace std;
+
 NS_LOG_COMPONENT_DEFINE ("Ipv4L3Protocol");
 
 namespace ns3 {
@@ -454,6 +457,7 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
 {
   NS_LOG_FUNCTION (this << device << p << protocol << from << to << packetType);
 
+  //cout << "Ipv4L3Protocol Receive from " << from << " on node " << m_node->GetId() << endl; 
   NS_LOG_LOGIC ("Packet from " << from << " received on node " << 
                 m_node->GetId ());
 
@@ -512,6 +516,21 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
     }
 
   NS_ASSERT_MSG (m_routingProtocol != 0, "Need a routing protocol object to process packets");
+  Simulator::Schedule(Seconds (0.08), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
+
+  /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
+                                      MakeCallback (&Ipv4L3Protocol::IpForward, this),
+                                      MakeCallback (&Ipv4L3Protocol::IpMulticastForward, this),
+                                      MakeCallback (&Ipv4L3Protocol::LocalDeliver, this),
+                                      MakeCallback (&Ipv4L3Protocol::RouteInputError, this)
+                                      ))
+    {
+      NS_LOG_WARN ("No route found for forwarding packet.  Drop.");
+      m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), interface);
+    }*/
+}
+
+void Ipv4L3Protocol::DelayReceive(Ptr<Packet> packet, Ipv4Header ipHeader, Ptr<NetDevice> device, uint32_t interface){
   if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
                                       MakeCallback (&Ipv4L3Protocol::IpForward, this),
                                       MakeCallback (&Ipv4L3Protocol::IpMulticastForward, this),
@@ -522,7 +541,10 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
       NS_LOG_WARN ("No route found for forwarding packet.  Drop.");
       m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), interface);
     }
+
+    cout << Simulator::Now() << " Delay Receive" << endl;
 }
+
 
 Ptr<Icmpv4L4Protocol> 
 Ipv4L3Protocol::GetIcmp (void) const
@@ -567,7 +589,7 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
                       Ptr<Ipv4Route> route)
 {
   NS_LOG_FUNCTION (this << packet << source << destination << uint32_t (protocol) << route);
-
+  //cout << "Ipv4L3Protocol send" << endl;
   Ipv4Header ipHeader;
   bool mayFragment = true;
   uint8_t ttl = m_defaultTtl;
@@ -597,6 +619,8 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
   if (destination.IsBroadcast () || destination.IsLocalMulticast ())
     {
       NS_LOG_LOGIC ("Ipv4L3Protocol::Send case 1:  limited broadcast");
+      NS_LOG_FUNCTION ("Ipv4L3Protocol::Send case 1:  limited broadcast");
+
       ipHeader = BuildHeader (source, destination, protocol, packet->GetSize (), ttl, tos, mayFragment);
       uint32_t ifaceIndex = 0;
       for (Ipv4InterfaceList::iterator ifaceIter = m_interfaces.begin ();
@@ -629,6 +653,8 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
               destination.CombineMask (ifAddr.GetMask ()) == ifAddr.GetLocal ().CombineMask (ifAddr.GetMask ())   )
             {
               NS_LOG_LOGIC ("Ipv4L3Protocol::Send case 2:  subnet directed bcast to " << ifAddr.GetLocal ());
+              NS_LOG_FUNCTION ("Ipv4L3Protocol::Send case 2:  subnet directed bcast to " << ifAddr.GetLocal ());
+
               ipHeader = BuildHeader (source, destination, protocol, packet->GetSize (), ttl, tos, mayFragment);
               Ptr<Packet> packetCopy = packet->Copy ();
               m_sendOutgoingTrace (ipHeader, packetCopy, ifaceIndex);
@@ -645,6 +671,9 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
   if (route && route->GetGateway () != Ipv4Address ())
     {
       NS_LOG_LOGIC ("Ipv4L3Protocol::Send case 3:  passed in with route");
+      NS_LOG_FUNCTION ("Ipv4L3Protocol::Send case 3:  passed in with route");
+
+      //cout << "Ipv4L3Protocol::Send case 3:  passed in with route" << endl;
       ipHeader = BuildHeader (source, destination, protocol, packet->GetSize (), ttl, tos, mayFragment);
       int32_t interface = GetInterfaceForDevice (route->GetOutputDevice ());
       m_sendOutgoingTrace (ipHeader, packet, interface);
@@ -658,10 +687,14 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
       // returned to the transport protocol with a source address but
       // there was no next hop available yet (since a route may need
       // to be queried).
+      //cout << "Ipv4L3Protocol::Send case 4: This case not yet implemented" << endl;
+
       NS_FATAL_ERROR ("Ipv4L3Protocol::Send case 4: This case not yet implemented");
     }
   // 5) packet is not broadcast, and route is NULL (e.g., a raw socket call)
   NS_LOG_LOGIC ("Ipv4L3Protocol::Send case 5:  passed in with no route " << destination);
+  NS_LOG_FUNCTION ("Ipv4L3Protocol::Send case 5:  passed in with no route " << destination);
+
   Socket::SocketErrno errno_; 
   Ptr<NetDevice> oif (0); // unused for now
   ipHeader = BuildHeader (source, destination, protocol, packet->GetSize (), ttl, tos, mayFragment);
@@ -674,6 +707,8 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
     {
       NS_LOG_ERROR ("Ipv4L3Protocol::Send: m_routingProtocol == 0");
     }
+  //Simulator::Schedule(Seconds (1.0), &Ipv4L3Protocol::DelaySend, this, newRoute, ipHeader, packet);
+
   if (newRoute)
     {
       int32_t interface = GetInterfaceForDevice (newRoute->GetOutputDevice ());
@@ -685,6 +720,21 @@ Ipv4L3Protocol::Send (Ptr<Packet> packet,
       NS_LOG_WARN ("No route to host.  Drop.");
       m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), 0);
     }
+}
+
+void Ipv4L3Protocol::DelaySend(Ptr<Ipv4Route> newRoute, Ipv4Header ipHeader, Ptr<Packet> packet){
+  if (newRoute)
+    {
+      int32_t interface = GetInterfaceForDevice (newRoute->GetOutputDevice ());
+      m_sendOutgoingTrace (ipHeader, packet, interface);
+      SendRealOut (newRoute, packet->Copy (), ipHeader);
+    }
+  else
+    {
+      NS_LOG_WARN ("No route to host.  Drop.");
+      m_dropTrace (ipHeader, packet, DROP_NO_ROUTE, m_node->GetObject<Ipv4> (), 0);
+    }
+  cout << Simulator::Now() << " Delay Send" << endl;
 }
 
 // XXX when should we set ip_id?   check whether we are incrementing

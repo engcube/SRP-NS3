@@ -290,6 +290,10 @@ private:
    */
   void HandleFragmentsTimeout ( std::pair<uint64_t, uint32_t> key, Ipv4Header & ipHeader, uint32_t iif);
 
+  void DelaySend(Ptr<Ipv4Route> newRoute, Ipv4Header ipHeader, Ptr<Packet> packet);
+  void DelayReceive(Ptr<Packet> packet, Ipv4Header ipHeader, Ptr<NetDevice> device, uint32_t interface);
+
+
   typedef std::vector<Ptr<Ipv4Interface> > Ipv4InterfaceList;
   typedef std::list<Ptr<Ipv4RawSocketImpl> > SocketList;
   typedef std::list<Ptr<IpL4Protocol> > L4List_t;
