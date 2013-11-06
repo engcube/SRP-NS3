@@ -123,6 +123,8 @@ protected:
   void DoDispose (void);
 
 private:
+  static void test();
+
   void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
   void send2Peer(Ptr<Packet> packet);
   bool m_update_state;

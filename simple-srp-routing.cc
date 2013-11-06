@@ -93,7 +93,7 @@ main (int argc, char *argv[])
   LogComponentEnable ("SimpleSRPRoutingExample", LOG_LEVEL_INFO);
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
   //LogComponentEnable ("SRPRoutingHelper", LOG_LEVEL_ALL);
-  LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_DEBUG);
+  //LogComponentEnable ("Ipv4SRPRouting", LOG_LEVEL_DEBUG);
   //LogComponentEnable ("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
 #endif
@@ -106,10 +106,10 @@ main (int argc, char *argv[])
 
   float app_start_time = 1.0;
   float app_stop_time = 25.0;
-  string dataRate = "10Mbps";//"1Gbps";
+  string dataRate = "100Mbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";
-  string sendRate = "1Mb/s";//"100Mb/s";
+  string sendRate = "10Mb/s";//"100Mb/s";
   uint16_t port = 9;   // Discard port (RFC 863)
   int sendNode = CORE_NUM+3;
   int simulateTime = (int)app_stop_time;
