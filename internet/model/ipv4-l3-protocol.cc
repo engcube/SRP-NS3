@@ -518,10 +518,10 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
 
   NS_ASSERT_MSG (m_routingProtocol != 0, "Need a routing protocol object to process packets");
 
-  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
-  uint32_t num = x->GetInteger(5,400);
+  //Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  //uint32_t num = x->GetInteger(5,400);
   //cout << "Random " << num << endl;
-  num = 50;
+  uint32_t num = 100;
   Simulator::Schedule(MilliSeconds (num), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
 
   /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
