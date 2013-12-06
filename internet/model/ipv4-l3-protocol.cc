@@ -532,7 +532,7 @@ NS_ASSERT_MSG (m_routingProtocol != 0, "Need a routing protocol object to proces
   //Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
   //uint32_t num = x->GetInteger(5,400);
   //cout << "Random " << num << endl;
-  uint32_t num = 0;//100;
+  uint32_t num = 100;
   Simulator::Schedule(MilliSeconds (num), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
 
   /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
