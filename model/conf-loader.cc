@@ -56,14 +56,6 @@ int ConfLoader::getTotalNum() const{
 }
 
 
-map<int, Subnet>& ConfLoader::getIndexSubnetMap(){
-  return index_subnet_map;
-}
-
-void ConfLoader::addItem2IndexSubnetMap(int index, Subnet& subnet){
-  index_subnet_map[index] = subnet;
-}
-
 void ConfLoader::setNodeContainer(NodeContainer& nc){
     m_nodes = nc;
 }
@@ -72,271 +64,106 @@ NodeContainer& ConfLoader::getNodeContainer(){
     return m_nodes;
 }
 
-int ConfLoader::getInterfaceIndex(int my, int to){
-    if(my<m_CoreNum){
-        if(to<m_CoreNum){
-            return 0;
+//----------------------
+
+int ConfLoader::calcDestNodeBySource(int id, int interface){
+    if(id < m_CoreNum){
+        return m_CoreNum+interface-1;
+    }else if(id < getTotalNum()){
+        if(interface<=m_CoreNum){
+            return interface-1;
         }else{
-            return to-m_CoreNum+1;
+            return id+m_ToRNum+m_BorderNum;
         }
     }else{
-        if(to>=m_CoreNum){
-            return 0;
-        }else{
-            return to+1;
-        }
+        return id - (m_ToRNum+m_BorderNum);
     }
-    return 0;
 }
 
-int ConfLoader::getIndexBySubnet(Subnet& subnet){
-    for(map<int, Subnet>::iterator it = index_subnet_map.begin(); it!=index_subnet_map.end(); ++it){
+int ConfLoader::calcDestInterfaceBySource(int id, int interface){
+    if(id < m_CoreNum){
+        return id+1;
+    }else if(id < getTotalNum()){
+        if(interface<=m_CoreNum){
+            return id-m_CoreNum+1;
+        }else{
+            return 1;
+        }
+    }else{
+        return m_CoreNum+1;
+    }
+}
+
+//node >= getTotalNum()
+// may have bugs
+int ConfLoader::calcSourceInterfaceByNode(int id, int node){
+    if (id==node) return 0;
+    if(id < m_CoreNum){
+        return node-getCoreNum()+1;
+    }else if(id < getTotalNum()){
+        if(node-id == m_ToRNum+m_BorderNum){
+            return m_CoreNum+1;
+        }else{
+            return node+1;
+        }
+    }else{
+        return 1;
+    }
+}
+
+Subnet& ConfLoader::calcSubnetByNode(int node){
+    return m_Subnets[node];
+}
+
+map<pair<int,int>, Subnet>& ConfLoader::getLinkSubnetMap(){
+    return m_LinkSubnet;
+}
+
+void ConfLoader::addItem2LinkSubnetMap(int index1, int index2, Subnet& subnet){
+    m_LinkSubnet[make_pair<int,int>(index1,index2)] = subnet;
+}
+  
+pair<int,int> ConfLoader::getLinkBySubnet(Subnet& subnet){
+    for(map<pair<int,int>, Subnet>::iterator it = m_LinkSubnet.begin(); it!=m_LinkSubnet.end(); ++it){
         if (it->second.equals(subnet)){
             return it->first;
         }
     }
-    return -1;
+    return pair<int,int>();
 }
 
-map<int, bool>& ConfLoader::getNodeStates(){
-    return this->nodeStates;
+Subnet& ConfLoader::getSubnetByID(int index1, int index2){
+    return m_LinkSubnet[make_pair<int,int>(index1,index2)];
 }
 
-void ConfLoader::setNodeStates(map<int, bool>& states){
-    this->nodeStates = states;
-}
-
-map<pair<int,int>,bool>& ConfLoader::getLinkStates(){
-    return this->linkStates;
-}
-
-void ConfLoader::setLinkStates(map<pair<int,int>,bool>& states){
-    this->linkStates = states;
-}
-
-void ConfLoader::setLinkState(int i, int j, bool state){
-    if(i>j){
-        this->linkStates[make_pair(j,i)] = state;
-    }
-    else{
-        this->linkStates[make_pair(i,j)] = state;
-    }
-}
-
-
-/*map<int, bool> ConfLoader::getNodeActions(){
-    return this->nodeActions;
-}
-
-bool ConfLoader::getNodeAction(int i){
-    return this->nodeActions[i];
-}*/
-
-void ConfLoader::setNodeState(int i, bool state){
-    this->nodeStates[i] = state;
-}
-
-bool ConfLoader::getNodeState(int i){
-    return this->nodeStates[i];
-}
-
-bool ConfLoader::getLinkState(int i, int j){
-    return this->linkStates[make_pair(i,j)];
-}
-
-/*bool ConfLoader::getLinkAction(int i, int j){
-    return this->linkActions[make_pair(i,j)];
-}
-
-vector<int> ConfLoader::getLinkAction(int i){
-    vector<int> result;
-    for(int k=0; k<getTotalNum(); k++){
-        pair<int,int> tmp(i,k);
-        //if (this->linkActions.find(tmp)){
-            result.push_back(k);
-            //this->linkActions.erase(tmp);
-        //}
-    }
-    return result;
-}
-
-
-void ConfLoader::setNodeActions(map<int, bool> actions){
-    this->nodeActions = actions;
-}
-
-map<pair<int,int>,bool> ConfLoader::getLinkActions(){
-    return this->linkActions;
-}
-
-void ConfLoader::setLinkActions(map<pair<int,int>,bool> actions){
-    this->linkActions = actions;
-}
-
-void ConfLoader::clearNodeActions(){
-    this->nodeActions.clear();
-}
-
-void ConfLoader::clearLinkActions(){
-    this->linkActions.clear();
-}*/
-
-map<Ipv4Address, int>& ConfLoader::getIpv4IndexMap(){
-    return m_ipv4_index_map;
-}
-
-void ConfLoader::setIpv4IndexMap(map<Ipv4Address, int>& m_map){
-    m_ipv4_index_map = m_map;
-}
-
-void ConfLoader::addItem2Ipv4IndexMap(Ipv4Address& ip, int index){
-    m_ipv4_index_map[ip] = index;
-}
-
-Subnet& ConfLoader::getSubnetByID(int id){
-    return index_subnet_map[id];
-}
-
-
-int ConfLoader::getIndexByIpv4(Ipv4Address& ip){
-    return m_ipv4_index_map[ip];
-}
-
-Ipv4Address ConfLoader::getIpv4ByIndex(int index){
-    for(map<Ipv4Address, int>::iterator it = m_ipv4_index_map.begin(); it!=m_ipv4_index_map.end(); ++it){
-        if (it->second == index){
-            return it->first;
+void ConfLoader::update(int id, map<Subnet, int>& table){
+  if(id < m_CoreNum){
+      for(int i=0;i<m_ToRNum+m_BorderNum;i++){
+          table[getSubnetByID(id, i+m_CoreNum)] = i+1;
+      }
+      for(int i=0;i<m_ToRNum;i++){
+          table[getSubnetByID(i+m_CoreNum, i+getTotalNum())] = i+1;
+      }
+      /*std::vector<Subnet> subnets = ConfLoader::Instance()->getSubnets();
+      for(std::vector<Subnet>::iterator it = subnets.begin(); it!=subnets.end(); ++it){
+          if(table.find(*it)==table.end()){
+          }
+      }*/
+  }else if(id<getTotalNum()){
+      for(int i=0; i<m_CoreNum; i++){
+          table[getSubnetByID(i,id)]=i+1;
+      }
+      for(int i=0; i<m_ToRNum; i++){
+        if(id == (i+m_CoreNum)){
+            table[getSubnetByID(id, id+m_ToRNum+m_BorderNum)] = m_CoreNum+1;
+        }else{
+            table[getSubnetByID(i+m_CoreNum, i+m_CoreNum+m_ToRNum+m_BorderNum)] = 1;
         }
-    }
-    return NULL;
-}
-
-void ConfLoader::UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid){
-  //Ptr<SRPGrid> mSRPGrid = node->GetObject<SRPRouter>()->GetRoutingProtocol()->GetSRPGrid();
-  //cout << id << ":status:" << this->nodeStates[id] << endl;
-  if(this->nodeStates[id]){
-    
-    if( id < m_CoreNum){  //Core
-        for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
-            map<int, int> mmap;
-            if(this->nodeStates[i] && getLinkState(id,i)){
-                mmap[i] = 1;
-            }else{
-                mmap[i] = 0;
-            }
-            SRPRoutingEntry entry(index_subnet_map[i], mmap);
-            mSRPGrid->addSRPGridEntry(entry);
-        }
-        map<int, int> mmap;
-        for(int i = m_CoreNum+m_ToRNum; i<getTotalNum(); i++){
-            if(this->nodeStates[i] && getLinkState(id,i)){
-              mmap[i] = 1;
-            }else{
-                mmap[i]=0;
-            }
-        }
-        Subnet subnet(0,0);
-        SRPRoutingEntry entry(subnet, mmap);
-        entry.setDescription("B_exit");
-        mSRPGrid->addSRPGridEntry(entry);
-/*
-        for(map<Ipv4Address, int>::iterator it = m_ipv4_index_map.begin(); it!=m_ipv4_index_map.end();++it){
-            map<int, int> mmap;
-            if(it->second == id){
-                mmap[id] = 1;
-            }else{
-                for(int i = m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
-                    if(this->nodeStates[i] && getLinkState(id,i)){
-                        mmap[i] = 1;
-                    }else{
-                        mmap[i] = 0;
-                    }
-                }
-                for(int i = m_CoreNum+m_ToRNum; i< getTotalNum(); i++){
-                    if(this->nodeStates[i] && getLinkState(id,i)){
-                        mmap[i] = 3;
-                    }else{
-                        mmap[i] = 2;
-                    }
-                }
-            }
-            SRPRoutingEntry entry(it->first, mmap);
-            mSRPGrid->addSRPGridEntry(entry);
-        }
-*/
-    }
-    else if( id < m_CoreNum+m_ToRNum){ //ToR
-
-        for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
-           if(i==id){
-              continue;
-           }
-           map<int, int> mmap;
-           for(int j=0; j < m_CoreNum; j++){
-            if(this->nodeStates[j] && getLinkState(j,id) && this->nodeStates[i] && getLinkState(j,i)){
-                mmap[j] = 1;
-            }else{
-                mmap[j]=0;
-            }
-           }
-
-           SRPRoutingEntry entry(index_subnet_map[i], mmap);
-           mSRPGrid->addSRPGridEntry(entry);
-        }
-        map<int, int> mmap;
-        for(int j=0; j < m_CoreNum; j++){
-          if(this->nodeStates[j] && getLinkState(j,id)){
-              mmap[j] = 1;
-            }
-            else{
-                mmap[j]=0;
-            }
-        }
-        Subnet subnet(0,0);
-        SRPRoutingEntry entry(subnet, mmap);
-        entry.setDescription("B_exit");
-        mSRPGrid->addSRPGridEntry(entry);
-
-    }else { //NodeType.BORDER
-        for(int i= m_CoreNum; i< m_CoreNum+m_ToRNum; i++){
-           map<int, int> mmap;
-           for(int j=0; j < m_CoreNum; j++){
-              if(this->nodeStates[j]&& getLinkState(j,id) && this->nodeStates[i]&& getLinkState(j,i)){
-                mmap[j] = 1;
-              }else{
-                mmap[j]=0;
-              }
-           }
-           
-           for(int j=m_CoreNum+m_ToRNum; j< getTotalNum(); j++){
-                if(j==id){
-                    continue;
-                }
-                mmap[j] = 2;
-                for(int k=0; k < m_CoreNum; k++){
-                    if(this->nodeStates[k]&& getLinkState(k,id)){
-                        mmap[j] = 3;
-                    }else{
-                        mmap[j] = 2;
-                    }
-                }
-                if(mmap[j]==3){
-                    if(j<id && this->nodeStates[j]&& getLinkState(j,id)){
-                        mmap[j] = 3;
-                    }else if(j<id){
-                        mmap[j] = 2;
-                    }else if(j>id && this->nodeStates[j]&& getLinkState(id,j)){
-                        mmap[j] = 3;
-                    } else if(j>id){
-                        mmap[j] = 2;
-                    }
-                }           
-                //cout << mmap[j] << endl;
-           }
-           SRPRoutingEntry entry(index_subnet_map[i], mmap);
-           mSRPGrid->addSRPGridEntry(entry);
-        }
-    }
+      }
+  }else{
+      for(std::vector<Subnet>::iterator it = m_Subnets.begin(); it!=m_Subnets.end(); ++it){
+          table[*it] = 1;
+      }
   }
 }
 

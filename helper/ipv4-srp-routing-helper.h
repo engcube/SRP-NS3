@@ -23,15 +23,12 @@
 #include <map>
 #include <iostream>
 
-#include "ns3/srp-router-interface.h"
-
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
-#include "ns3/subnet.h"
 
-#include "ns3/conf-loader.h"
 #include "ns3/ipv4-srp-routing.h"
 #include "ns3/ipv4-list-routing.h"
+#include "ns3/conf-loader.h"
 
 using namespace std;
 

@@ -28,8 +28,10 @@
 #include "ns3/ipv4-routing-table-entry.h"
 #include "ns3/boolean.h"
 #include "ipv4-srp-routing.h"
+#include "ns3/srp-tag.h"
 
 #include <sstream>
+#include <algorithm>
 
 NS_LOG_COMPONENT_DEFINE ("Ipv4SRPRouting");
 
@@ -56,6 +58,9 @@ Ipv4SRPRouting::GetTypeId (void)
   return tid;
 }
 
+//Ipv4SRPRouting::Ipv4SRPRouting (){
+//}
+
 Ipv4SRPRouting::Ipv4SRPRouting () 
   : m_randomEcmpRouting (false),
     m_respondToInterfaceEvents (false)
@@ -63,6 +68,7 @@ Ipv4SRPRouting::Ipv4SRPRouting ()
   NS_LOG_FUNCTION (this);
   m_update_state = false;
   m_rand = CreateObject<UniformRandomVariable> ();
+  //m_SRPRoutingTable = map<Subnet, int>();
 }
 
 Ipv4SRPRouting::~Ipv4SRPRouting ()
@@ -70,12 +76,12 @@ Ipv4SRPRouting::~Ipv4SRPRouting ()
   NS_LOG_FUNCTION (this);
 }
 
-void Ipv4SRPRouting::SetSRPGrid(Ptr<SRPGrid> grid){
-    this->m_SRPGrid = grid;
+void Ipv4SRPRouting::SetSRPRoutingTable(map<Subnet, int>& grid){
+    this->m_SRPRoutingTable = grid;
 }
 
-Ptr<SRPGrid> Ipv4SRPRouting::GetSRPGrid (void){
-    return this->m_SRPGrid;
+map<Subnet, int>& Ipv4SRPRouting::GetSRPRoutingTable (void){
+    return this->m_SRPRoutingTable;
 }
 
 void
@@ -104,251 +110,362 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 bool Ipv4SRPRouting::update(){
   //cout << "<<<<in update  " << m_id << endl;
   NS_LOG_DEBUG(Simulator::Now() << "update  " << m_id );
-
-  if(!ConfLoader::Instance()->getNodeState(m_id)){
-      //cout << ">>>>out update with 1 false " << m_id << endl;
-      return false;
-  }
-  if(this->m_update_state){
-      //cout << ">>>>out update with 1 true " << m_id << endl;
-      return true;
-  }
-  Ptr<SRPGrid> mGrid = CreateObject<SRPGrid> ();
-  ConfLoader::Instance()->UpdateSRPGrid(m_id, mGrid);
-  vector<int> lastList = this->m_SRPGrid->getEffectSubnet();
-  vector<int> curList = mGrid->getEffectSubnet();
-  vector<int> downList;
-  vector<int> upList;
-
-  this->m_SRPGrid = mGrid;
-  NS_LOG_DEBUG( "update  " << m_id << " Grid" );
-  
-  this->m_update_state = true;
-
-  for(vector<int>::iterator curit=curList.begin(); curit!=curList.end(); ++curit){
-      bool isExist = false;
-      for(vector<int>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
-          if(*curit==*lastit){
-              isExist = true;
-              break;
-          }
-      }
-      if(!isExist){
-          upList.push_back(*curit);
-      }
-  }      
-  for(vector<int>::iterator lastit=lastList.begin(); lastit!=lastList.end();++lastit){
-      bool isExist = false;  
-      for(vector<int>::iterator curit=curList.begin(); curit!=curList.end();++curit){
-          if(*lastit == *curit){
-              isExist = true;
-              break;
-          }
-      }
-      if(!isExist){
-          downList.push_back(*lastit);
-      }
-  }
-
-  if(downList.size()==0&&upList.size()==0){
-      //cout << ">>>>out update with 2 false " << m_id << endl;
-      return false;
-  }
-  //send
-  //SRPTag tag;
-  //tag.setID(m_id);
-  int i=0;
-  while(i<10000000){
-    i++;
-  }
-  string ss = ConfLoader::Instance()->getUpdateMsgString();
-  int len = ss.size();
-  char str[len];
-  strcpy(str, ss.c_str());
-  Ptr<Packet> packet = Create<Packet>(reinterpret_cast<const uint8_t*>(str), (const uint32_t)len);
-  //packet->AddPacketTag(tag);
-  send2Peer(packet);
-  //cout << ">>>>out update with 2  true " << m_id << endl;
   return true;
 }
 
-void Ipv4SRPRouting::send2Peer(Ptr<Packet> packet){
-  int CORE = ConfLoader::Instance()->getCoreNum();
-  int TOR = ConfLoader::Instance()->getToRNum();
-  int BORDER = ConfLoader::Instance()->getBorderNum();
+void Ipv4SRPRouting::addToNeighbors(int neighbor, Time time){
+    m_CurNeighbors[neighbor] = time;
+}
+  
+map<int, Time>& Ipv4SRPRouting::getNeighbors(){
+    return m_CurNeighbors;
+}
 
-  if(m_id<CORE){
-      //temperary ignore Border!
-      //for(int i=ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getTotalNum(); i++){ 
-      for(int i=CORE; i<CORE+TOR; i++){ 
-          if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
-                sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
-                //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                 //   ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
-          }
-      }
-  }else{
-      for(int i=0; i<CORE; i++){
-          if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
-                  sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
-                //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                //    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
-          }
-      }
-      if(m_id>=CORE+TOR){
-          for(int i=CORE+TOR; i<CORE+TOR+BORDER; i++){
-              if(m_id>i){
-                  if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(i,m_id)){
-                      sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
-                      //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                       //   ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
-                  }
-              }else if(m_id<i){
-                  if(ConfLoader::Instance()->getNodeState(i)&&ConfLoader::Instance()->getLinkState(m_id,i)){
-                      sendMessage(ConfLoader::Instance()->getIpv4ByIndex(i),packet);
-                     //sendMessage(ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<SRPRouter>()
-                      //    ->GetRoutingProtocol()->getIpv4()->GetAddress (1, 0).GetLocal (), packet);
-                  }
+void Ipv4SRPRouting::removeFromNeighbors(int neighbor){
+    m_CurNeighbors.erase(neighbor);
+}
+
+void Ipv4SRPRouting::addToLinkStateDatabase(int node, int cost){
+    m_LinkStateDatabase[node] = cost;
+}
+
+map<int, int>& Ipv4SRPRouting::getLinkStateDatabase(){
+    return m_LinkStateDatabase;
+}
+  
+void Ipv4SRPRouting::removeFromLinkStateDatabase(int node){
+    m_LinkStateDatabase.erase(node);
+}
+
+void Ipv4SRPRouting::initGrid(){
+    m_Grid.clear();        
+    int add = ConfLoader::Instance()->getBorderNum()+ConfLoader::Instance()->getToRNum();
+
+    if(m_id < ConfLoader::Instance()->getCoreNum()){
+        for(int i= ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i++){
+            map<int, int> grid_line;
+            grid_line[i] = 1;
+            m_Grid[add+i] = grid_line;
+        }
+    }else if(m_id<ConfLoader::Instance()->getTotalNum()){
+        for(int i= ConfLoader::Instance()->getCoreNum(); i<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum(); i++){
+            if(i==m_id){
+                continue;
+            }
+            map<int, int> grid_line;
+              for(int j = 0; j<ConfLoader::Instance()->getCoreNum(); j++){
+                  grid_line[j] = 1;
               }
+            m_Grid[add+i] = grid_line;  
+        }        
+    }
+    //cout << toGridString() << endl;
+
+    reCalculate();
+}
+
+string Ipv4SRPRouting::toGridString(){
+    stringstream result;
+    result << m_id << "\tGrid:" << endl;
+    for(map<int, map<int,int> >::iterator it = m_Grid.begin(); it != m_Grid.end(); ++it){
+        result << it->first << ":\t\t";
+        for(map<int,int>::iterator it2 = it->second.begin(); it2!=it->second.end(); ++it2){
+            result << it2->first << ":" << it2->second << "\t";
+        }
+        result << endl;
+    }
+    return result.str();
+}
+
+string Ipv4SRPRouting::toString(){
+    stringstream result;
+    result << m_id << "\tRoutingTable:" << endl;
+    for(map<Subnet, int>::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
+        result << it->first.toString() << "\t" << it->second << "\n";
+    }
+    return result.str();
+}
+
+void Ipv4SRPRouting::sendHelloMessage(){
+    Ptr<Packet> packet = Create<Packet>(1);
+    SRPTag tag;
+    tag.setType(1);
+    tag.setNode(m_id);
+    packet->AddPacketTag(tag);
+
+    Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(m_id), TypeId::LookupByName ("ns3::UdpSocketFactory"));
+    m_socket->SetAllowBroadcast(true);
+    m_socket->Bind ();
+    m_socket->Connect (Address (InetSocketAddress ("255.255.255.255", 9)));
+    m_socket->Send (packet);
+    //cout << m_id << " send a hello message" << endl;
+}
+
+int Ipv4SRPRouting::diffVector(vector<int>& list1, vector<int>& list2){
+    std::vector<int> upList;
+    std::vector<int> downList;
+    for(std::vector<int>::iterator it = list1.begin(); it!=list1.end(); ++it){
+        if(find(list2.begin(), list2.end(), *it)==list2.end()){
+            downList.push_back(*it);
+        }
+    }
+    for(std::vector<int>::iterator it = list2.begin(); it!=list2.end(); ++it){
+        if(find(list1.begin(), list1.end(), *it)==list1.end()){
+            upList.push_back(*it);
+        }
+    }
+    if(upList.size()==0&&downList.size()==0){ return -1;}
+    int index = ConfLoader::Instance()->getLSANum();
+    ConfLoader::Instance()->addLSA(index, upList, downList);
+    return index;
+};
+
+void Ipv4SRPRouting::reCalculate(){
+    map<Subnet, int> routingTable;
+    for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
+        map<int, int> grid_line = it->second;
+        for(map<int, int>::iterator it2 = grid_line.begin(); it2!=grid_line.end(); ++it2){
+            if(it2->second%2==1){
+                routingTable[ConfLoader::Instance()->getSubnetByNode(it->first)] = ConfLoader::Instance()->calcSourceInterfaceByNode(m_id, it2->first);
+                break;
+            }
+        }
+    }
+    if(m_id >=ConfLoader::Instance()->getCoreNum()&& m_id < ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+        routingTable[ConfLoader::Instance()->getSubnetByNode(m_id+ConfLoader::Instance()->getBorderNum()+ConfLoader::Instance()->getToRNum())] = ConfLoader::Instance()->getCoreNum()+1;
+    }
+    if(m_id >= ConfLoader::Instance()->getTotalNum()){
+        for(int i = ConfLoader::Instance()->getTotalNum(); i < ConfLoader::Instance()->getTotalNum()+ConfLoader::Instance()->getToRNum(); i++){
+            if(i==m_id){
+                routingTable[ConfLoader::Instance()->getSubnetByNode(i)] = 0;
+            }else{
+                routingTable[ConfLoader::Instance()->getSubnetByNode(i)] = 1;
+            }
+        }
+    }
+    m_SRPRoutingTable = routingTable;
+    cout << toString() << endl;
+}
+
+void Ipv4SRPRouting::checkDiff(int node, int index){
+
+    vector<int> upLSA = ConfLoader::Instance()->getUpLSA(index);
+    vector<int> downLSA = ConfLoader::Instance()->getDownLSA(index);
+    vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
+
+    for(std::vector<int>::iterator it = upLSA.begin(); it!=upLSA.end(); ++it){
+        if(m_Grid.find(*it)!=m_Grid.end() && m_Grid[*it].find(node)!= m_Grid[*it].end()){
+            if(m_Grid[*it][node]%2==0){
+                m_Grid[*it][node] ++;
+            }
+        }
+    }
+    for(std::vector<int>::iterator it = downLSA.begin(); it!=downLSA.end(); ++it){
+        if(m_Grid.find(*it)!=m_Grid.end() && m_Grid[*it].find(node)!= m_Grid[*it].end()){
+            if(m_Grid[*it][node]%2==1){
+                m_Grid[*it][node] --;
+            }
+        }
+    }
+    //check if m_Grid has update
+    vector<int> curAvailableNodes = getAvailableNodes(m_Grid);
+    reCalculate();
+
+    int num = diffVector(lastAvailableNodes, curAvailableNodes);
+    if( num<0 ){
+        cout << m_id <<" no change" <<endl;
+        return;
+    }
+    sendLSAMessage(num);
+}
+
+void Ipv4SRPRouting::sendLSAMessage(int num){
+    //m_LSAs[node] = ConfLoader::Instance()->getLSA(index);
+    Ptr<Packet> packet = Create<Packet>(1);
+    SRPTag tag;
+    tag.setType(2);
+    tag.setNode((uint16_t)m_id);
+    tag.setLSA((uint32_t)num);
+    //tag.setLSAIndex();
+    packet->AddPacketTag(tag);
+
+    Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(m_id), TypeId::LookupByName ("ns3::UdpSocketFactory"));
+    m_socket->SetAllowBroadcast(true);
+    m_socket->Bind ();
+    m_socket->Connect (Address (InetSocketAddress ("255.255.255.255", 9)));
+    m_socket->Send (packet);
+}
+
+vector<int> Ipv4SRPRouting::getAvailableNodes(map<int, map<int, int> >& grid){
+    std::vector<int> v;
+    for(map<int, map<int, int> >::iterator it = grid.begin(); it!=grid.end(); ++it){
+        map<int, int> item = it->second;
+        for(map<int, int>::iterator it2 = item.begin(); it2 != item.end(); ++it2){
+            if(it2->second%2==1){
+                v.push_back(it->first);
+                break;
+            }
+        }
+    }
+    return v;
+}
+
+void Ipv4SRPRouting::toString(vector<uint16_t>& v){
+    for(int i=0; i< (int)v.size(); i++){
+      cout << (int)v[i] << " ";
+    }
+    cout << endl;
+}
+
+void Ipv4SRPRouting::handleMessage(Ptr<const Packet> packet){
+          SRPTag tag;
+          uint8_t type;
+          uint16_t from;
+          bool found = packet->PeekPacketTag(tag);
+          if (found){
+            type = tag.getType();
+            from = tag.getNode();
+            //cout << from;
+            if(type == 1){
+                //cout << "receive hello message" << endl;
+                addToNeighbors(from, Simulator::Now());
+            }else if(type == 2){
+                //cout << "receive update message from " << (int)from << endl;
+                uint32_t index = tag.getLSAIndex();
+                checkDiff(from, index);
+            }else{
+                //cout << "receive not-hello message" << endl;
+            }
+          }else{
+              //cout << "receive normal message" << endl;
+              ConfLoader::Instance()->prepareLinkDown();
           }
-      }
-  }
+
+}
+
+void Ipv4SRPRouting::addNeighbor(int node){
+    vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
+    for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
+        map<int, int> item = it->second;
+        for(map<int, int>::iterator it2 = item.begin(); it2 != item.end(); ++it2){
+            if(node==it2->first && (it2->second%2==0)){
+              it2->second++;
+              break;
+            }
+        }
+        it->second = item;
+    }
+    vector<int> curAvailableNodes = getAvailableNodes(m_Grid);
+    reCalculate();
+
+    int num = diffVector(lastAvailableNodes, curAvailableNodes);
+    if( num<0 ){
+        return;
+    }
+    sendLSAMessage(num);
+}
+
+void Ipv4SRPRouting::removeNeighbor(int node){  
+    vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
+    for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
+        map<int, int> item = it->second;
+        for(map<int, int>::iterator it2 = item.begin(); it2 != item.end(); ++it2){
+            if(node==it2->first && (it2->second%2==1)){
+              it2->second--;
+              break;
+            }
+        }
+        it->second = item;
+    }
+    vector<int> curAvailableNodes = getAvailableNodes(m_Grid);
+    reCalculate();
+
+    int num = diffVector(lastAvailableNodes, curAvailableNodes);
+    if( num<0 ){
+        return;
+    }
+    sendLSAMessage(num);
+}
+
+void Ipv4SRPRouting::updateNeighbors(){
+    vector<uint16_t> lsa;
+    for(map<int, Time>::iterator it = m_CurNeighbors.begin(); it != m_CurNeighbors.end(); ++it){
+            lsa.push_back((uint16_t)it->first);
+    }
+    //cout << "neighbors change" << endl;
+    //int index = ConfLoader::Instance()->getLSANum();
+    //ConfLoader::Instance()->addLSA(index, lsa);
+    //sendLSAMessage(m_id, index);
+    //m_LastNeighbors = m_CurNeighbors;
+}
+
+void Ipv4SRPRouting::checkNeighbors(){
+    //cout << m_id << " now has " << m_LSAs.size() << endl;
+
+    /*Time now = Simulator::Now();
+    for(map<int, Time>::iterator it = m_CurNeighbors.begin(); it != m_CurNeighbors.end(); ++it){
+        if(now - it->second > Seconds(ConfLoader::Instance()->getUnavailableInterval())){
+            m_CurNeighbors.erase(it);
+        }
+    }
+    bool toNotify = false;
+    for(map<int, Time>::iterator it = m_CurNeighbors.begin(); it != m_CurNeighbors.end(); ++it){
+        if(m_LastNeighbors.find(it->first) == m_LastNeighbors.end()){
+            toNotify = true;
+        }
+    }
+
+    for(map<int, Time>::iterator it = m_LastNeighbors.begin(); it != m_LastNeighbors.end(); ++it){
+        if(m_CurNeighbors.find(it->first) == m_CurNeighbors.end()){
+            toNotify = true;
+        }
+    }
+    if(toNotify){
+        vector<uint16_t> lsa;
+        for(map<int, Time>::iterator it = m_CurNeighbors.begin(); it != m_CurNeighbors.end(); ++it){
+            lsa.push_back((uint16_t)it->first);
+        }
+        //cout << "neighbors change" << endl;
+        int index = ConfLoader::Instance()->getLSANum();
+        ConfLoader::Instance()->addLSA(index, lsa);
+        sendLSAMessage(m_id, index);
+    }
+    m_LastNeighbors = m_CurNeighbors;*/
+}
+
+void Ipv4SRPRouting::send2Peer(Ptr<Packet> packet){
 }
 
 void Ipv4SRPRouting::sendMessage(Ipv4Address ip, Ptr<Packet> packet){
-  Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(m_id), TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  /*Ptr<Socket> m_socket = Socket::CreateSocket (ConfLoader::Instance()->getNodeContainer().Get(m_id), TypeId::LookupByName ("ns3::UdpSocketFactory"));
   m_socket->Bind ();
   m_socket->Connect (Address (InetSocketAddress (ip, 9)));
-  m_socket->Send (packet);
+  m_socket->Send (packet);*/
 }
 
 
-Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPGrid (Ipv4Address dest)
+Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
-  if(ConfLoader::Instance()->getNodeState(m_id)==false){
-      NS_LOG_DEBUG( "Node " << m_id << " down!" );
-      ConfLoader::Instance()->incrementLossPacketCounter();
-      ConfLoader::Instance()->setCurrentTime(Simulator::Now());
-      //this->update();
+  int out_interface = -1;
+  for(map<Subnet, int>::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
+      if(it->first.contains(dest)){
+          out_interface = it->second;
+      }
+  }
+  if(out_interface == -1){
+      cout << "No route found!" << endl;
       return 0;
   }
-  int destNode = -1;
-  map<int, int> nodeList;
-  if(ConfLoader::Instance()->getIpv4IndexMap().count(dest)>0){
-      int node = ConfLoader::Instance()->getIpv4IndexMap()[dest];
-      if(ConfLoader::Instance()->getNodeState(node)==false){    
-          NS_LOG_DEBUG( "Node " << node << " down!");  
-          ConfLoader::Instance()->incrementLossPacketCounter();
-          ConfLoader::Instance()->setCurrentTime(Simulator::Now());
-          return 0;
-      }
-      if(node>=ConfLoader::Instance()->getCoreNum()&&node<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
-          nodeList = m_SRPGrid->getNodeListByID(node);
-      }else if(node<ConfLoader::Instance()->getCoreNum()){
-          if(m_id<ConfLoader::Instance()->getCoreNum()){
-              NS_LOG_DEBUG( "Invaild path from " << m_id << " to " << node);
-              ConfLoader::Instance()->incrementLossPacketCounter();
-              ConfLoader::Instance()->setCurrentTime(Simulator::Now());
-              return 0;
-          }else if(m_id<ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
-              if(ConfLoader::Instance()->getLinkState(node,m_id)){
-                  nodeList[node] = 1;
-              }else{
-                  nodeList[node] = 0;
-              }
-          }else{
-              if(ConfLoader::Instance()->getLinkState(node,m_id)){
-                  nodeList[node] = 3;
-              }else{
-                  nodeList[node] = 2;
-              }
-          }
-      }else{
-        // may have bugs
-          if(m_id<ConfLoader::Instance()->getCoreNum()){
-              if(ConfLoader::Instance()->getLinkState(m_id,node)){
-                  nodeList[node] = 3;
-              }else{
-                  nodeList[node] = 2;
-              }
-          }else{
-              for(int j=0; j < ConfLoader::Instance()->getCoreNum(); j++){
-                  if(ConfLoader::Instance()->getNodeState(j) && ConfLoader::Instance()->getLinkState(j,m_id) && ConfLoader::Instance()->getLinkState(j,node)){
-                      nodeList[j] = 3;
-                  }else{
-                      nodeList[j]=2;
-                  }
-              }
-          }
-      }
-  }else{
-    nodeList = m_SRPGrid->getNodeListByHost(dest);
-  }
-    //value = 1
-    vector<int> v1_list;
-    //value = 3
-    vector<int> v3_list;
-    for(map<int, int>::iterator it = nodeList.begin(); it != nodeList.end(); ++it){
-        if(it->second==1){
-            if((it->first > m_id && ConfLoader::Instance()->getLinkState(m_id, it->first)) 
-                || (it->first < m_id && ConfLoader::Instance()->getLinkState(it->first, m_id))){
-                v1_list.push_back(it->first);
-            }  
-        }else if(it->second==3){
-            if((it->first > m_id && ConfLoader::Instance()->getLinkState(m_id, it->first)) 
-                || (it->first < m_id && ConfLoader::Instance()->getLinkState(it->first, m_id))){
-                v3_list.push_back(it->first);
-            }  
-        }
-    }
-
-    //routing algorthm: how to choose a path
-    // pick up one of the routes uniformly at random if random
-    // ECMP routing is enabled, or always select the first route
-    // consistently if random ECMP routing is disabled
-
-    if(v1_list.size()>0){
-        if (m_randomEcmpRouting){
-            destNode = v1_list[m_rand->GetInteger (0, v1_list.size ()-1)];
-        }
-        else{
-            destNode = v1_list.front();
-        }
-    }else if(v3_list.size()>0){
-        if (m_randomEcmpRouting){
-            destNode = v3_list[m_rand->GetInteger (0, v3_list.size ()-1)];
-        }
-        else{
-            destNode = v3_list.front();
-        }
-    }else{
-	      NS_LOG_DEBUG( "no route found!");
-        ConfLoader::Instance()->incrementLossPacketCounter();
-        ConfLoader::Instance()->setCurrentTime(Simulator::Now());
-        return 0;
-    }
-  
-
-  NS_LOG_LOGIC ("Route Found to Node " << destNode);
-  int to_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(destNode, m_id);
-  int my_index_of_interface = ConfLoader::Instance()->getInterfaceIndex(m_id, destNode);
-
-  NS_LOG_DEBUG( "Route from this node "<<m_id <<" on interface " << my_index_of_interface <<" to Node " << destNode << " on interface " << to_index_of_interface);
-
-  Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<SRPRouter>()->GetRoutingProtocol()->getIpv4();
-
+  int destNode = ConfLoader::Instance()->calcDestNodeBySource(m_id, out_interface);
+  int destInterface = ConfLoader::Instance()->calcDestInterfaceBySource(m_id, out_interface);
+  Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<Ipv4SRPRouting>()->getIpv4();
+  cout << Simulator::Now() << "Route from this node "<<m_id <<" on interface " << out_interface <<" to Node " << destNode << " on interface " << destInterface << endl;
   Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
-  rtentry->SetDestination (to_ipv4->GetAddress (to_index_of_interface, 0).GetLocal ());
-
-  // XXX handle multi-address case
-  rtentry->SetSource (m_ipv4->GetAddress (my_index_of_interface, 0).GetLocal ());
-
+  rtentry->SetDestination (to_ipv4->GetAddress (destInterface, 0).GetLocal ());
+  rtentry->SetSource (m_ipv4->GetAddress (out_interface, 0).GetLocal ());
   rtentry->SetGateway (Ipv4Address("0.0.0.0"));
-  //uint32_t interfaceIdx = route->GetInterface ();
-  //rtentry->SetOutputDevice (m_ipv4->GetNetDevice (interfaceIdx));
-  rtentry->SetOutputDevice (m_ipv4->GetNetDevice (my_index_of_interface));
-  //Ptr<Ipv4Route> rtentry = 0;
+  rtentry->SetOutputDevice (m_ipv4->GetNetDevice (out_interface));
   return rtentry;
 }
 
@@ -357,25 +474,10 @@ Ptr<Ipv4Route>
 Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {
   NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
-//
-// First, see if this is a multicast packet we have a route for.  If we
-// have a route, then send the packet down each of the specified interfaces.
-//
   NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination());
-  //cout << Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() << endl;
-  //Time time = Seconds(0.05);
-  //Simulator::Schedule(time, &send, header, sockerr);
-
-  if (header.GetDestination ().IsMulticast ())
-    {
-      NS_LOG_LOGIC ("Multicast destination-- returning false");
-      return 0; // Let other routing protocols try to handle this
-    }
-//
-// See if this is a unicast packet we have a route for.
-//
+  cout << Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() << endl;
   NS_LOG_LOGIC ("Unicast destination- looking up");
-  Ptr<Ipv4Route> rtentry = LookupSRPGrid (header.GetDestination ());
+  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetDestination ());
   if (rtentry)
     {
       sockerr = Socket::ERROR_NOTERROR;
@@ -398,70 +500,51 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
 { 
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev << &lcb << &ecb);
   // Check if input device supports IP
-
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
   NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() );
-  
-  //cout << ss.str() << endl;
-  if (header.GetDestination ().IsMulticast ())
+  cout << Simulator::Now() << " " << m_id <<" receive a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() << endl;
+  for (uint32_t j = 0; j < m_ipv4->GetNInterfaces (); j++)
     {
-      NS_LOG_LOGIC ("Multicast destination-- returning false");
-      return false; // Let other routing protocols try to handle this
+      for (uint32_t i = 0; i < m_ipv4->GetNAddresses (j); i++)
+        {
+          Ipv4InterfaceAddress iaddr = m_ipv4->GetAddress (j, i);
+          Ipv4Address addr = iaddr.GetLocal ();
+          if (addr.IsEqual (header.GetDestination ()))
+            {
+              if (j == iif)
+                {
+                  NS_LOG_LOGIC ("For me (destination " << addr << " match)");
+                }
+              else
+                {
+                  NS_LOG_LOGIC ("For me (destination " << addr << " match) on another interface " << header.GetDestination ());
+                }
+              lcb (p, header, iif);
+              //cout << "destination match!" <<endl;
+              return true;
+            }
+          if (header.GetDestination ().IsEqual (iaddr.GetBroadcast ()))
+            {
+              NS_LOG_LOGIC ("For me (interface broadcast address)");
+              lcb (p, header, iif);
+              return true;
+            }
+          NS_LOG_LOGIC ("Address "<< addr << " not a match");
+        }
     }
-
-  if (header.GetDestination ().IsBroadcast ())
-    {
-      NS_LOG_LOGIC ("For me (Ipv4Addr broadcast address)");
-      // TODO:  Local Deliver for broadcast
-      // TODO:  Forward broadcast
-    }
-
-  if (ConfLoader::Instance()->getIndexSubnetMap()[m_id].contains(header.GetDestination()) ){
-      NS_LOG_LOGIC ("For me (destination " << header.GetDestination() << " match)");
-      //cout << "Destination match" << endl;
-      //lcb (p, header, iif);
-      return true;
-  }
-
-  if(ConfLoader::Instance()->getIpv4IndexMap().count(header.GetDestination())>0 && 
-              ConfLoader::Instance()->getIpv4IndexMap()[header.GetDestination()] == m_id){
-      //cout << "Destination match" << endl;
-      string ss = ConfLoader::Instance()->getUpdateMsgString();
-      int len = ss.size();
-      char str[len];
-      strcpy(str, ss.c_str());
-      uint8_t buffer[len];
-      p->CopyData (buffer, (const uint32_t)len);
-      bool needUpdate = false;
-      for(int i=0;i<5;i++){
-          if(buffer[i] != (uint8_t)str[i]){
-              needUpdate = true;
-              break;
-          }
-      }
-      if(needUpdate){
-          this->update();
-      }
-      //lcb (p, header, iif);
-      return true;
-  }
-
-  // Check if input device supports IP forwarding
-  if (m_ipv4->IsForwarding (iif) == false)
+    if (m_ipv4->IsForwarding (iif) == false)
     {
       NS_LOG_LOGIC ("Forwarding disabled for this interface");
       ecb (p, header, Socket::ERROR_NOROUTETOHOST);
       return false;
     }
   // Next, try to find a route
-  NS_LOG_LOGIC ("Unicast destination- looking up SRP Grid");
-  Ptr<Ipv4Route> rtentry = LookupSRPGrid (header.GetDestination ());
-
+  NS_LOG_LOGIC ("Unicast destination- looking up global route");
+  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetDestination ());
   if (rtentry != 0)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
-
       ucb (rtentry, p, header);
       return true;
     }
@@ -472,6 +555,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
                     // route request.
     }
 }
+
 void 
 Ipv4SRPRouting::NotifyInterfaceUp (uint32_t i)
 {

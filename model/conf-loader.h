@@ -8,7 +8,6 @@
 
 #include "ns3/node-container.h"
 #include "ns3/subnet.h"
-#include "ns3/srp-router-interface.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/nstime.h"
 
@@ -17,7 +16,6 @@ using namespace std;
 namespace ns3{
 
 class NodeContainer;
-class SRPGrid;
 class Ipv4Address;
 
 class ConfLoader
@@ -38,52 +36,34 @@ public:
   uint32_t getAddressStart() const;
 
 
-  map<int, Subnet>& getIndexSubnetMap();
-  void addItem2IndexSubnetMap(int index, Subnet& subnet);
-  Ipv4Address getIpv4ByIndex(int index);
+  map<pair<int,int>, Subnet>& getLinkSubnetMap();
+  void addItem2LinkSubnetMap(int index1, int index2, Subnet& subnet);
+  pair<int,int> getLinkBySubnet(Subnet& subnet);
+  Subnet& getSubnetByID(int index1, int index2);
 
   void setNodeContainer(NodeContainer& nc);
   NodeContainer& getNodeContainer();
-  int getInterfaceIndex(int my, int to);
 
-  map<int, bool>& getNodeStates();
-  void setNodeStates(map<int, bool>& states);
-  void setNodeState(int i, bool state);
-  bool getNodeState(int i);
-  bool getLinkState(int i, int j);
+  void incrementLossPacketCounter(){ 
+    if(!isDown){
+        return;
+    }
+    this->m_lossPacketCounter++;
+  };
 
-  map<pair<int,int>,bool>& getLinkStates();
-  void setLinkStates(map<pair<int,int>,bool>& states);
-  void setLinkState(int i, int j, bool state);
-
-  /*map<int, bool> getNodeActions();
-  void setNodeActions(map<int, bool> actions);
-  bool getNodeAction(int i);
-
-  map<pair<int,int>,bool> getLinkActions();
-  void setLinkActions(map<pair<int,int>,bool> actions);
-  bool getLinkAction(int i, int j);
-
-  vector<int> getLinkAction(int i);
-
-  void clearNodeActions();
-  void clearLinkActions();*/
-
-  void UpdateSRPGrid(int id, Ptr<SRPGrid> mSRPGrid);
-  int getIndexBySubnet(Subnet& subnet);
-  Subnet& getSubnetByID(int id);
-
-  map<Ipv4Address, int>& getIpv4IndexMap();
-  void setIpv4IndexMap(map<Ipv4Address, int>& m_map);
-  void addItem2Ipv4IndexMap(Ipv4Address& ip, int index);
-  int getIndexByIpv4(Ipv4Address& ip);
-
-  string getUpdateMsgString(){return UPDATE_MSG;};
-
-  void incrementLossPacketCounter(){ this->m_lossPacketCounter++;};
+  void prepareLinkDown(){
+      if(isDown){
+          return;
+      }
+      isDown = true;
+      cout << "Lost packets: " << m_lossPacketCounter << endl;
+      cout << "Duration: " <<  m_startTime << " to " << m_stopTime << endl;
+      this->m_lossPacketCounter=0;
+  }
   int getLossPacketCounter(){ return this->m_lossPacketCounter;};
 
   void setCurrentTime(Time time){
+    if(!isDown){ return;}
     m_stopTime = time;
     if(m_startTime.IsZero()){
         m_startTime = time;
@@ -92,15 +72,73 @@ public:
 
   Time getDiffTime(){
       return m_stopTime - m_startTime;
+  };
+
+  Time& getStartTime(){
+    return m_startTime;
+  };
+
+  Time& getStopTime(){ return m_stopTime;};
+
+  int calcDestNodeBySource(int id, int interface);
+  int calcDestInterfaceBySource(int id, int interface);
+  int calcSourceInterfaceByNode(int id, int node);
+  Subnet& calcSubnetByNode(int node);
+
+  vector<Subnet>& getSubnets(){
+      return m_Subnets;
   }
+
+  void addSubnet(Subnet& subnet){
+      m_Subnets.push_back(subnet);
+  }
+
+  void update(int id, map<Subnet, int>& table);
+
+  string getHelloMsgString(){
+      return string("hello");
+  }
+
+  void setUnavailableInterval(int UnavailableInterval){
+      this->m_UnavailableInterval = UnavailableInterval;
+  };
+
+  int getUnavailableInterval(){
+      return this->m_UnavailableInterval;
+  };
+
+  void addToNodeSubnet(int id, Subnet& subnet){
+      m_NodeSubnets[id] = subnet;
+  };
+
+  Subnet& getSubnetByNode(int id){
+      return m_NodeSubnets[id];
+  };
+
+  void addLSA(int index, vector<int>& uplsa, std::vector<int>& downlsa){
+    set<vector<int> > lsas;
+    lsas.insert(uplsa);
+    lsas.insert(downlsa);
+    m_lsas[index] = lsas;
+    m_lsaNum ++;
+  };
+
+  int getLSANum(){return m_lsaNum;};
+  
+  const vector<int>& getUpLSA(int index){ 
+    return *(m_lsas[index].begin());
+  };  
+  
+  const vector<int>& getDownLSA(int index){ 
+    return *(++m_lsas[index].begin());
+  };
 
 private:
 
-  string UPDATE_MSG;
-
 	ConfLoader(){
-    UPDATE_MSG = "update!";
     m_lossPacketCounter = 0;
+    isDown = false;
+    m_lsaNum = 0;
   };
 	ConfLoader(ConfLoader const&){};
 	//ConfLoader& operator=(ConfLoader const&){};
@@ -112,28 +150,26 @@ private:
       BORDER,
   };
 
-  map<int, Subnet> index_subnet_map;
+  map<pair<int,int>, Subnet> m_LinkSubnet;
+  std::vector<Subnet> m_Subnets;
+  map<int, Subnet> m_NodeSubnets;
 
-  map<Ipv4Address, int> m_ipv4_index_map;
-  
-  map<int, bool> nodeStates;
-  map<pair<int,int>,bool> linkStates;
-
-  //map<int, bool> nodeActions;
-  //map<pair<int,int>,bool> linkActions;
-
+  int m_UnavailableInterval;
   int m_CoreNum;
   int m_ToRNum;
   int m_BorderNum;
   int m_SubnetMask;
   uint32_t m_AddressStart;
 
+  bool isDown;
   int m_lossPacketCounter;
   Time m_startTime;
   Time m_stopTime;
 
   NodeContainer m_nodes;
 
+  map<int, set<vector<int> > > m_lsas;
+  int m_lsaNum;
 };
 
 }

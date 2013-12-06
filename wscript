@@ -9,11 +9,9 @@
 def build(bld):
     module = bld.create_ns3_module('srp', ['core','internet'])
     module.source = [
-        'model/conf-loader.cc',
         'model/ipv4-srp-routing.cc',
-#'model/srp-tag.cc',
-        #'model/srp-route-manager-impl.cc',
-        'model/srp-router-interface.cc',
+        'model/conf-loader.cc',
+        'model/srp-tag.cc',
         'helper/ipv4-srp-routing-helper.cc',
         'util/subnet.cc',
         ]
@@ -26,11 +24,9 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'srp'
     headers.source = [
-        'model/conf-loader.h',
         'model/ipv4-srp-routing.h',
-        #'model/srp-tag.h',
-        #'model/srp-route-manager-impl.h',
-        'model/srp-router-interface.h',
+        'model/conf-loader.h',
+        'model/srp-tag.h',
         'helper/ipv4-srp-routing-helper.h',
         'util/subnet.h',
         ]

@@ -28,7 +28,6 @@
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/srp-router-interface.h"
 #include "ns3/conf-loader.h"
 
 #include "ns3/simulator.h"
@@ -46,7 +45,6 @@ class Ipv4Header;
 class Ipv4RoutingTableEntry;
 class Ipv4MulticastRoutingTableEntry;
 class Node;
-class SRPGrid;
 //class SRPRouter;
 
 /**
@@ -102,6 +100,8 @@ public:
   virtual void SetIpv4 (Ptr<Ipv4> ipv4);
   virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream) const;
 
+  string toString();
+
   Ptr<Ipv4> getIpv4();
 
   //Ptr<SRPRouter> getRouter() const;
@@ -109,8 +109,8 @@ public:
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
 
-  void SetSRPGrid(Ptr<SRPGrid> grid);
-  Ptr<SRPGrid> GetSRPGrid (void);
+  void SetSRPRoutingTable(map<Subnet, int>& grid);
+  map<Subnet, int>& GetSRPRoutingTable (void);
   bool update();
   
   bool getUpdateState(){
@@ -118,6 +118,36 @@ public:
   };
   void setUpdateState(){m_update_state = true;};
   void resetUpdateState(){m_update_state = false;};
+
+  void sendHelloMessage();
+
+  void addToNeighbors(int neighbor, Time time);
+  map<int, Time>& getNeighbors();
+  void removeFromNeighbors(int neighbor);
+
+  void addToLinkStateDatabase(int node, int cost);
+  map<int, int>& getLinkStateDatabase();
+  void removeFromLinkStateDatabase(int node);
+
+  void checkNeighbors();
+  void sendLSAMessage(int num);
+
+  void handleMessage(Ptr<const Packet> packet);
+  void toString(vector<uint16_t>& v);
+  void Dijkstra();
+
+  void addNeighbor(int node);
+  void removeNeighbor(int node);
+  void updateNeighbors();
+  
+  int diffVector(vector<int>& list1, vector<int>& list2);
+  void reCalculate();
+  vector<int> getAvailableNodes(map<int, map<int, int> >& grid);
+
+  void initGrid();
+  string toGridString();
+  void checkDiff(int node, int index);
+
 
 protected:
   void DoDispose (void);
@@ -129,8 +159,16 @@ private:
   void send2Peer(Ptr<Packet> packet);
   bool m_update_state;
 
-  //Ptr<SRPRouter> m_router;
-  Ptr<SRPGrid> m_SRPGrid;
+  map<Subnet, int> m_SRPRoutingTable;
+
+  map<int, Time> m_LastNeighbors;
+  map<int, Time> m_CurNeighbors;
+
+  map<int, vector<uint16_t> > m_LSAs;
+
+  map<int, int> m_LinkStateDatabase;
+
+  map<int, map<int, int> > m_Grid;
 
   int m_id;
   /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
@@ -142,9 +180,10 @@ private:
 
   //Ptr<Ipv4Route> LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif = 0);
 
-  Ptr<Ipv4Route> LookupSRPGrid (Ipv4Address dest);
+  Ptr<Ipv4Route> LookupSRPRoutingTable (Ipv4Address dest);
 
   Ptr<Ipv4> m_ipv4;
+
 };
 
 } // Namespace ns3
