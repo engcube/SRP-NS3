@@ -56,7 +56,7 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   routing->initGrid();
   //router->setID(id);
   //router->SetRoutingProtocol (routing);
-  map<Subnet, int> mSRPRoutingTable;
+  map<Subnet, vector<int> > mSRPRoutingTable;
   //Subnet subnet(0x0a000000, 24);
   //mSRPRoutingTable.insert(pair<Subnet, int>(subnet, id));
   //mSRPRoutingTable[subnet] = id;

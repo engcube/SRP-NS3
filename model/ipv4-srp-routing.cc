@@ -76,11 +76,11 @@ Ipv4SRPRouting::~Ipv4SRPRouting ()
   NS_LOG_FUNCTION (this);
 }
 
-void Ipv4SRPRouting::SetSRPRoutingTable(map<Subnet, int>& grid){
+void Ipv4SRPRouting::SetSRPRoutingTable(map<Subnet, vector<int> >& grid){
     this->m_SRPRoutingTable = grid;
 }
 
-map<Subnet, int>& Ipv4SRPRouting::GetSRPRoutingTable (void){
+map<Subnet, vector<int> >& Ipv4SRPRouting::GetSRPRoutingTable (void){
     return this->m_SRPRoutingTable;
 }
 
@@ -180,8 +180,11 @@ string Ipv4SRPRouting::toGridString(){
 string Ipv4SRPRouting::toString(){
     stringstream result;
     result << m_id << "\tRoutingTable:" << endl;
-    for(map<Subnet, int>::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
-        result << it->first.toString() << "\t" << it->second << "\n";
+    for(map<Subnet, vector<int> >::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
+        std::vector<int> v = it->second;
+        for(std::vector<int>::iterator it2 = v.begin(); it2!=v.end(); ++it2){
+            result << it->first.toString() << "\t" << *it2 << "\n";
+        }
     }
     return result.str();
 }
@@ -221,26 +224,32 @@ int Ipv4SRPRouting::diffVector(vector<int>& list1, vector<int>& list2){
 };
 
 void Ipv4SRPRouting::reCalculate(){
-    map<Subnet, int> routingTable;
+    map<Subnet, vector<int> > routingTable;
     for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
         map<int, int> grid_line = it->second;
+        Subnet node = ConfLoader::Instance()->getSubnetByNode(it->first);
+        std::vector<int> v;
         for(map<int, int>::iterator it2 = grid_line.begin(); it2!=grid_line.end(); ++it2){
             if(it2->second%2==1){
-                routingTable[ConfLoader::Instance()->getSubnetByNode(it->first)] = ConfLoader::Instance()->calcSourceInterfaceByNode(m_id, it2->first);
-                break;
+                v.push_back(ConfLoader::Instance()->calcSourceInterfaceByNode(m_id, it2->first));
             }
         }
+        routingTable[node] = v;
     }
     if(m_id >=ConfLoader::Instance()->getCoreNum()&& m_id < ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
-        routingTable[ConfLoader::Instance()->getSubnetByNode(m_id+ConfLoader::Instance()->getBorderNum()+ConfLoader::Instance()->getToRNum())] = ConfLoader::Instance()->getCoreNum()+1;
+        std::vector<int> v;
+        v.push_back(ConfLoader::Instance()->getCoreNum()+1);
+        routingTable[ConfLoader::Instance()->getSubnetByNode(m_id+ConfLoader::Instance()->getBorderNum()+ConfLoader::Instance()->getToRNum())] = v;
     }
     if(m_id >= ConfLoader::Instance()->getTotalNum()){
         for(int i = ConfLoader::Instance()->getTotalNum(); i < ConfLoader::Instance()->getTotalNum()+ConfLoader::Instance()->getToRNum(); i++){
+            std::vector<int> v;
             if(i==m_id){
-                routingTable[ConfLoader::Instance()->getSubnetByNode(i)] = 0;
+              v.push_back(0);
             }else{
-                routingTable[ConfLoader::Instance()->getSubnetByNode(i)] = 1;
+              v.push_back(1);
             }
+            routingTable[ConfLoader::Instance()->getSubnetByNode(i)] = v;
         }
     }
     m_SRPRoutingTable = routingTable;
@@ -444,13 +453,18 @@ void Ipv4SRPRouting::sendMessage(Ipv4Address ip, Ptr<Packet> packet){
 }
 
 
-Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address dest)
+Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Address dest)
 {
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
   int out_interface = -1;
-  for(map<Subnet, int>::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
+  for(map<Subnet, vector<int> >::iterator it = m_SRPRoutingTable.begin(); it != m_SRPRoutingTable.end(); ++it){
       if(it->first.contains(dest)){
-          out_interface = it->second;
+          //out_interface = it->second;
+          int size = it->second.size();
+          //ECMP hash
+          int choice = (int)(source.Get()+dest.Get()) % size;
+          out_interface = it->second[choice];
+          break;
       }
   }
   if(out_interface == -1){
@@ -477,7 +491,7 @@ Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDev
   NS_LOG_DEBUG( Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination());
   cout << Simulator::Now() << " " << m_id <<" send a packet\t"<< p << "\t" << header.GetSource() << "\t"<<header.GetDestination() << endl;
   NS_LOG_LOGIC ("Unicast destination- looking up");
-  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetDestination ());
+  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetSource(), header.GetDestination ());
   if (rtentry)
     {
       sockerr = Socket::ERROR_NOTERROR;
@@ -541,7 +555,7 @@ Ipv4SRPRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<
     }
   // Next, try to find a route
   NS_LOG_LOGIC ("Unicast destination- looking up global route");
-  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetDestination ());
+  Ptr<Ipv4Route> rtentry = LookupSRPRoutingTable (header.GetSource(), header.GetDestination ());
   if (rtentry != 0)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");

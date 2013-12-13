@@ -109,8 +109,8 @@ public:
   int getID(){return m_id;};
   void setID(int index){m_id = index;};
 
-  void SetSRPRoutingTable(map<Subnet, int>& grid);
-  map<Subnet, int>& GetSRPRoutingTable (void);
+  void SetSRPRoutingTable(map<Subnet, vector<int> >& grid);
+  map<Subnet, vector<int> >& GetSRPRoutingTable (void);
   bool update();
   
   bool getUpdateState(){
@@ -159,7 +159,7 @@ private:
   void send2Peer(Ptr<Packet> packet);
   bool m_update_state;
 
-  map<Subnet, int> m_SRPRoutingTable;
+  map<Subnet, vector<int> > m_SRPRoutingTable;
 
   map<int, Time> m_LastNeighbors;
   map<int, Time> m_CurNeighbors;
@@ -180,7 +180,7 @@ private:
 
   //Ptr<Ipv4Route> LookupSRP (Ipv4Address dest, Ptr<NetDevice> oif = 0);
 
-  Ptr<Ipv4Route> LookupSRPRoutingTable (Ipv4Address dest);
+  Ptr<Ipv4Route> LookupSRPRoutingTable (Ipv4Address source, Ipv4Address dest);
 
   Ptr<Ipv4> m_ipv4;
 
