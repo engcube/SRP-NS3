@@ -176,6 +176,10 @@ public:
 
   uint32_t getPacketReceiveDelay(){return m_PacketReceiveDelay;};
   void setPacketReceiveDelay(uint32_t delay){m_PacketReceiveDelay = delay;};
+  void setCongestionWaningLimit(float limit){m_CongestionWarningLimit = limit;};
+  float getCongestionWaningLimit(){return m_CongestionWarningLimit;};
+  void setCalculateCost(float cost){m_CalculateCost = cost;};
+  float getCalculateCost(){return m_CalculateCost;};
 private:
 
 	ConfLoader(){
@@ -191,6 +195,8 @@ private:
       TOR,
       BORDER,
   };
+  float m_CongestionWarningLimit; 
+  float m_CalculateCost;
 
   map<pair<int,int>, Subnet> m_LinkSubnet;
   std::vector<Subnet> m_Subnets;

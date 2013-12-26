@@ -108,21 +108,14 @@ int main (int argc, char *argv[])
   int CORE_NUM = 2;
   int TOR_NUM = 4;
   int BORDER_NUM = 2;
-  
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
-
   int nNodes = CORE_NUM + TOR_NUM + BORDER_NUM;
   int total = nNodes + TOR_NUM;
-  
   float app_start_time = 1.0;
   float app_stop_time = 10.0;
   float listen_app_stop_time = 55.0;
   uint32_t stopTime = 60;
-  //float downTime = 2;
-  //float upTime  = 8;
-
-  //float findDelay = 0.1; //s
   string dataRate = "1Gbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";
@@ -133,10 +126,17 @@ int main (int argc, char *argv[])
   uint16_t port = 9;   // Discard port (RFC 863)
   int sendNode = nNodes+2;
   int destNode = nNodes+1;
+  int destNode2 = nNodes + 2;
+  int sendNode2 = nNodes + 0;
+  uint32_t packetSize = 512;
+  float CONGESTION_WARNING_LIMIT = 0.85;
+  float CALCULATE_COST = 0.001;
   //int simulateTime = (int)app_stop_time;
   //int simulateInterval = 3;
-  uint32_t packetSize = 512;
+  //float downTime = 2;
+  //float upTime  = 8;
 
+  //float findDelay = 0.1; //s
   //ConfLoader::Instance()->setUnavailableInterval(UnavailableInterval);
   ConfLoader::Instance()->setCoreNum(CORE_NUM);
   ConfLoader::Instance()->setToRNum(TOR_NUM);
@@ -145,7 +145,8 @@ int main (int argc, char *argv[])
   ConfLoader::Instance()->setAddressStart(ADDRESS_START);
 
   ConfLoader::Instance()->setPacketReceiveDelay(packetReceiveDelay);
-  
+  ConfLoader::Instance()->setCongestionWaningLimit(CONGESTION_WARNING_LIMIT);
+  ConfLoader::Instance()->setCalculateCost(CALCULATE_COST);
   CommandLine cmd;
   bool enableFlowMonitor = false;
   cmd.AddValue ("EnableMonitor", "Enable Flow Monitor", enableFlowMonitor);
@@ -304,8 +305,6 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (app_start_time));
   apps.Stop (Seconds (app_stop_time));
   
-  int destNode2 = nNodes + 2;
-  int sendNode2 = nNodes + 0;
   OnOffHelper onoff2 ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (c.Get(destNode2)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
 

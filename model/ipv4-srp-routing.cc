@@ -225,7 +225,7 @@ int Ipv4SRPRouting::diffVector(vector<int>& list1, vector<int>& list2){
     return index;
 };
 
-void Ipv4SRPRouting::reCalculate(){
+void Ipv4SRPRouting::DoCalculate(){
     map<Subnet, vector<int> > routingTable;
     for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
         map<int, int> grid_line = it->second;
@@ -255,7 +255,11 @@ void Ipv4SRPRouting::reCalculate(){
         }
     }
     m_SRPRoutingTable = routingTable;
-    cout << toString() << endl;
+    cout << toString() << endl;  
+}
+
+void Ipv4SRPRouting::reCalculate(){
+    Simulator::Schedule (Seconds (ConfLoader::Instance()->getCalculateCost()), &Ipv4SRPRouting::DoCalculate, this);
 }
 
 void Ipv4SRPRouting::checkDiff(int node, int index){
@@ -280,6 +284,7 @@ void Ipv4SRPRouting::checkDiff(int node, int index){
     }
     //check if m_Grid has update
     vector<int> curAvailableNodes = getAvailableNodes(m_Grid);
+
     reCalculate();
 
     int num = diffVector(lastAvailableNodes, curAvailableNodes);
@@ -489,7 +494,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
   float percent = current*1.0/total;
   cout << "Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
 
-  if(percent>0.75){
+  if(percent>ConfLoader::Instance()->getCongestionWaningLimit()){
       cout << "Remove " << destNode << " from Neigbors; Update neighbors of " << m_id << endl;
       //CheckTxQueue();
       //updateNeighbors();
@@ -518,7 +523,7 @@ void Ipv4SRPRouting::CheckTxQueue(){
       float percent = current*1.0/total;
       cout << i << "/" << n << " ;Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
 
-      if(percent<=0.75){
+      if(percent<=ConfLoader::Instance()->getCongestionWaningLimit()){
           m_CurNeighbors[ConfLoader::Instance()->getNodeByInterface(m_id,i)] = Simulator::Now();
       }
     }

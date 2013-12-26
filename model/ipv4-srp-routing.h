@@ -134,14 +134,12 @@ public:
 
   void handleMessage(Ptr<const Packet> packet);
   void toString(vector<uint16_t>& v);
-  void Dijkstra();
 
   void addNeighbor(int node);
   void removeNeighbor(int node);
   void updateNeighbors();
   
   int diffVector(vector<int>& list1, vector<int>& list2);
-  void reCalculate();
   vector<int> getAvailableNodes(map<int, map<int, int> >& grid);
 
   void initGrid();
@@ -155,7 +153,11 @@ protected:
 private:
   static void test();
   void CheckTxQueue();
+  void DoCalculate();
 
+  void Dijkstra();
+  void reCalculate();
+  
   void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
   void send2Peer(Ptr<Packet> packet);
   bool m_update_state;
