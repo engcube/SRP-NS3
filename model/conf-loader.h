@@ -161,6 +161,18 @@ public:
   };
 
   map<int,int>& getRecvPacket(){return m_RecvPacket;};
+  
+  int getNodeByInterface(int id, int interface){
+      if(id < m_CoreNum){
+          return m_CoreNum+interface-1;
+      }else if(id<m_CoreNum+m_ToRNum+m_BorderNum){
+          if(interface==m_CoreNum+1) return id+m_ToRNum+m_BorderNum;
+          else return interface-1;
+      }else{
+        return id - (m_ToRNum+m_BorderNum);
+      }
+      return -1;
+  };
 
   uint32_t getPacketReceiveDelay(){return m_PacketReceiveDelay;};
   void setPacketReceiveDelay(uint32_t delay){m_PacketReceiveDelay = delay;};

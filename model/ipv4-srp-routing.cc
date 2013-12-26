@@ -29,6 +29,8 @@
 #include "ns3/boolean.h"
 #include "ipv4-srp-routing.h"
 #include "ns3/srp-tag.h"
+#include "ns3/core-module.h"
+#include "ns3/queue.h"
 
 #include <sstream>
 #include <algorithm>
@@ -475,6 +477,24 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
   int destInterface = ConfLoader::Instance()->calcDestInterfaceBySource(m_id, out_interface);
   Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<Ipv4SRPRouting>()->getIpv4();
   cout << Simulator::Now() << "Route from this node "<<m_id <<" on interface " << out_interface <<" to Node " << destNode << " on interface " << destInterface << endl;
+  
+  PointerValue ptr;
+  m_ipv4->GetNetDevice (out_interface)->GetAttribute("TxQueue", ptr);
+  int current = ptr.Get<Queue> ()->GetNPackets() ;
+
+  UintegerValue limit;
+  ptr.Get<Queue> ()->GetAttribute ("MaxPackets", limit);
+  int total = limit.Get ();
+
+  float percent = current*1.0/total;
+  cout << "Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
+
+  if(percent>0.75){
+      cout << "Remove " << destNode << " from Neigbors; Update neighbors of " << m_id << endl;
+      //CheckTxQueue();
+      //updateNeighbors();
+  }
+
   Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
   rtentry->SetDestination (to_ipv4->GetAddress (destInterface, 0).GetLocal ());
   rtentry->SetSource (m_ipv4->GetAddress (out_interface, 0).GetLocal ());
@@ -483,6 +503,26 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
   return rtentry;
 }
 
+void Ipv4SRPRouting::CheckTxQueue(){
+    m_CurNeighbors.clear();
+    int n = m_ipv4->GetNInterfaces();
+    for(int i=1; i< n; i++){
+      PointerValue ptr;
+      m_ipv4->GetNetDevice (i)->GetAttribute("TxQueue", ptr);
+      int current = ptr.Get<Queue> ()->GetNPackets() ;
+
+      UintegerValue limit;
+      ptr.Get<Queue> ()->GetAttribute ("MaxPackets", limit);
+      int total = limit.Get ();
+
+      float percent = current*1.0/total;
+      cout << i << "/" << n << " ;Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
+
+      if(percent<=0.75){
+          m_CurNeighbors[ConfLoader::Instance()->getNodeByInterface(m_id,i)] = Simulator::Now();
+      }
+    }
+}
 
 Ptr<Ipv4Route>
 Ipv4SRPRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)

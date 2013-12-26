@@ -154,6 +154,7 @@ protected:
 
 private:
   static void test();
+  void CheckTxQueue();
 
   void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
   void send2Peer(Ptr<Packet> packet);
