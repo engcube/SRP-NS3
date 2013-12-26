@@ -68,6 +68,31 @@ void CheckNeighbor(){
     }
 }
 
+void printTxInfo(int node, int index){
+    PointerValue ptr;
+    Ptr<Queue> txQueue;
+    ConfLoader::Instance()->getNodeContainer().Get(node)->GetObject<Ipv4SRPRouting>()->getIpv4()->GetNetDevice (index)->GetAttribute("TxQueue", ptr);
+    txQueue = ptr.Get<Queue> ();
+    cout << node << ":" << index << " totalDropped Packets: "<< txQueue->GetTotalDroppedPackets()<< endl;
+    cout << node << ":" << index << " totalReveived Packets: "<< txQueue->GetTotalReceivedPackets()<< endl;
+}
+
+void statistics(){
+    printTxInfo(10,1);
+    printTxInfo(4,1);
+    printTxInfo(4,2);
+
+    printTxInfo(8,1);
+    printTxInfo(2,1);
+    printTxInfo(2,2);
+
+    printTxInfo(0,2);
+    printTxInfo(1,2);
+    printTxInfo(3,3);
+    printTxInfo(3,1);
+    printTxInfo(3,2);
+}
+
 int main (int argc, char *argv[])
 {
   //LogComponentEnable ("OnOffApplication", LOG_LEVEL_INFO);
@@ -92,15 +117,19 @@ int main (int argc, char *argv[])
   
   float app_start_time = 1.0;
   float app_stop_time = 10.0;
-  uint32_t stopTime = 11;
-  float downTime = 2;
-  float upTime  = 8;
+  float listen_app_stop_time = 55.0;
+  uint32_t stopTime = 60;
+  //float downTime = 2;
+  //float upTime  = 8;
 
-  float findDelay = 0.1; //s
+  //float findDelay = 0.1; //s
   string dataRate = "1Gbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";
-  string sendRate = "0.01Mb/s";//"100Mb/s";
+  string sendRate = "10Mb/s";//"100Mb/s";
+  string dequeGap = "0.5ms";
+  uint32_t packetReceiveDelay = 0;
+  int maxPackets = 10000;
   uint16_t port = 9;   // Discard port (RFC 863)
   int sendNode = nNodes+2;
   int destNode = nNodes+1;
@@ -115,6 +144,8 @@ int main (int argc, char *argv[])
   ConfLoader::Instance()->setSubnetMask(SUBNET_MASK);
   ConfLoader::Instance()->setAddressStart(ADDRESS_START);
 
+  ConfLoader::Instance()->setPacketReceiveDelay(packetReceiveDelay);
+  
   CommandLine cmd;
   bool enableFlowMonitor = false;
   cmd.AddValue ("EnableMonitor", "Enable Flow Monitor", enableFlowMonitor);
@@ -155,6 +186,7 @@ int main (int argc, char *argv[])
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue (dataRate));
   pointToPoint.SetChannelAttribute ("Delay", StringValue (delay));
+  pointToPoint.SetDeviceAttribute ("InterframeGap", StringValue(dequeGap));
 
   list<NetDeviceContainer> netDeviceContainers;
   for(list<NodeContainer>::iterator it= nodeContainers.begin(); it!=nodeContainers.end(); ++it){
@@ -260,6 +292,7 @@ int main (int argc, char *argv[])
       //Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   NS_LOG_INFO ("Create Applications.");
 
+  Config::Set ("/NodeList/*/DeviceList/*/TxQueue/MaxPackets", UintegerValue (maxPackets));
   //cout << destNode << endl;
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (c.Get(destNode)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
@@ -271,6 +304,17 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (app_start_time));
   apps.Stop (Seconds (app_stop_time));
   
+  int destNode2 = nNodes + 2;
+  int sendNode2 = nNodes + 0;
+  OnOffHelper onoff2 ("ns3::UdpSocketFactory", 
+                     Address (InetSocketAddress (c.Get(destNode2)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
+
+  onoff2.SetConstantRate (DataRate (sendRate), packetSize);
+  apps = onoff.Install (c.Get (sendNode2));
+
+  apps.Start (Seconds (app_start_time));
+  apps.Stop (Seconds (app_stop_time));
+
   // Create a packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
                          Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
@@ -278,7 +322,7 @@ int main (int argc, char *argv[])
     apps = sink.Install (c.Get (i));
   }
   apps.Start (Seconds (app_start_time));
-  apps.Stop (Seconds (app_stop_time));
+  apps.Stop (Seconds (listen_app_stop_time));
 
   /*Ptr<OutputStreamWrapper> routintable = Create<OutputStreamWrapper>("routingtable",std::ios::out);
   for(int i=0;i<total;i++){
@@ -296,16 +340,17 @@ int main (int argc, char *argv[])
 
   cout << "Run Simulation." << endl;
   
-  Ptr<Node> n1 = c.Get (downNode1);
-  Ptr<Ipv4> ipv4 = n1->GetObject<Ipv4> ();
+  //Ptr<Node> n1 = c.Get (downNode1);
+  //Ptr<Ipv4> ipv4 = n1->GetObject<Ipv4> ();
   // The first ifIndex is 0 for loopback, then the first p2p is numbered 1,
   // then the next p2p is numbered 2
-  uint32_t ipv4ifIndex = downInterface1;
+  //uint32_t ipv4ifIndex = downInterface1;
   Simulator::Schedule (Seconds (0), &init);
-  Simulator::Schedule (Seconds (downTime),&Ipv4::SetDown, ipv4, ipv4ifIndex);
-  Simulator::Schedule (Seconds (downTime+ findDelay ),&downAction);
-  Simulator::Schedule (Seconds (upTime),&Ipv4::SetUp, ipv4, ipv4ifIndex);
-  Simulator::Schedule (Seconds (upTime+ findDelay ),&upAction);
+  Simulator::Schedule (Seconds (stopTime), &statistics);
+  //Simulator::Schedule (Seconds (downTime),&Ipv4::SetDown, ipv4, ipv4ifIndex);
+  //Simulator::Schedule (Seconds (downTime+ findDelay ),&downAction);
+  //Simulator::Schedule (Seconds (upTime),&Ipv4::SetUp, ipv4, ipv4ifIndex);
+  //Simulator::Schedule (Seconds (upTime+ findDelay ),&upAction);
 
   /*for(int i=1; i<simulateTime/simulateInterval;i++){
     Time onInterval = Seconds (i*simulateInterval);
@@ -330,8 +375,9 @@ int main (int argc, char *argv[])
     }
   Simulator::Run ();
   cout << "Done." << endl;
-  Simulator::Destroy ();
-  cout << "Lost packets: " << ConfLoader::Instance()->getLossPacketCounter() << endl;
-  cout << "Duration: " <<  ConfLoader::Instance()->getStartTime() << " to " << ConfLoader::Instance()->getStopTime() << endl;
+  cout << "Lost packets: " << endl << ConfLoader::Instance()->PrintMap(ConfLoader::Instance()->getLossPacketCounter()) << endl;
+  cout << "Send: " << endl << ConfLoader::Instance()->PrintMap(ConfLoader::Instance()->getSendPacket()) << endl;
+  cout << "Receive: " << endl << ConfLoader::Instance()->PrintMap(ConfLoader::Instance()->getRecvPacket()) << endl;
+  cout << "Success: " << endl << ConfLoader::Instance()->PrintMap(ConfLoader::Instance()->getSuccessPacket()) << endl;
   return 0;
 }

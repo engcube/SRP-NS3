@@ -463,6 +463,12 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
                 m_node->GetId ());
   //cout << "Packet from " << from << " received on node " << m_node->GetId () << endl;
 
+              SRPTag tag;
+              bool found = p->PeekPacketTag(tag);
+              if (!found){
+                  ConfLoader::Instance()->incrementRecvPacket(m_node->GetId());
+              }
+
   uint32_t interface = 0;
   Ptr<Packet> packet = p->Copy ();
 
@@ -483,17 +489,25 @@ Ipv4L3Protocol::Receive ( Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t p
             {
               NS_LOG_LOGIC ("Dropping received packet -- interface is down");
               
+              Ipv4Header ipHeader;
+              packet->RemoveHeader (ipHeader);
+
               SRPTag tag;
               bool found = packet->PeekPacketTag(tag);
               if (found){
                 cout << "Dropping received tag packet -- interface is down" << endl;
               }else{
                 cout << "Dropping normal packet -- interface is down" << endl;
-                ConfLoader::Instance()->incrementLossPacketCounter();
+                int index = 0;
+                for(int i=ConfLoader::Instance()->getTotalNum(); i< ConfLoader::Instance()->getTotalNum()+ConfLoader::Instance()->getToRNum(); i++){
+                    if(ConfLoader::Instance()->getSubnetByNode(i).contains(ipHeader.GetSource())){
+                       index = i;
+                       break;
+                    }
+                }
+                ConfLoader::Instance()->incrementLossPacketCounter(index);
                 ConfLoader::Instance()->setCurrentTime(Simulator::Now());
               }
-              Ipv4Header ipHeader;
-              packet->RemoveHeader (ipHeader);
               m_dropTrace (ipHeader, packet, DROP_INTERFACE_DOWN, m_node->GetObject<Ipv4> (), interface);
               return;
             }
@@ -532,7 +546,8 @@ NS_ASSERT_MSG (m_routingProtocol != 0, "Need a routing protocol object to proces
   //Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
   //uint32_t num = x->GetInteger(5,400);
   //cout << "Random " << num << endl;
-  uint32_t num = 100;
+  
+  uint32_t num = ConfLoader::Instance()->getPacketReceiveDelay();//100;
   Simulator::Schedule(MilliSeconds (num), &Ipv4L3Protocol::DelayReceive, this, packet, ipHeader, device, interface);
 
   /*if (!m_routingProtocol->RouteInput (packet, ipHeader, device,
@@ -840,6 +855,18 @@ Ipv4L3Protocol::SendRealOut (Ptr<Ipv4Route> route,
       else
         {
           NS_LOG_LOGIC ("Dropping -- outgoing interface is down: " << ipHeader.GetDestination ());
+          cout << "Dropping -- outgoing interface is Down" << endl;
+                int index = 0;
+                for(int i=ConfLoader::Instance()->getTotalNum(); i< ConfLoader::Instance()->getTotalNum()+ConfLoader::Instance()->getToRNum(); i++){
+                    if(ConfLoader::Instance()->getSubnetByNode(i).contains(ipHeader.GetSource())){
+                       index = i;
+                       break;
+                    }
+                }
+                ConfLoader::Instance()->incrementLossPacketCounter(index);
+
+          ConfLoader::Instance()->setCurrentTime(Simulator::Now());
+
           Ipv4Header ipHeader;
           packet->RemoveHeader (ipHeader);
           m_dropTrace (ipHeader, packet, DROP_INTERFACE_DOWN, m_node->GetObject<Ipv4> (), interface);
