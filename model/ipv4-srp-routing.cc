@@ -111,7 +111,9 @@ void Ipv4SRPRouting::setRouter(Ptr<SRPRouter> router){
 
 bool Ipv4SRPRouting::update(){
   //cout << "<<<<in update  " << m_id << endl;
-  NS_LOG_DEBUG(Simulator::Now() << "update  " << m_id );
+  NS_LOG_DEBUG(Simulator::Now() << "update  " << m_id );  
+  
+  CheckTxQueue();
   return true;
 }
 
@@ -222,6 +224,7 @@ int Ipv4SRPRouting::diffVector(vector<int>& list1, vector<int>& list2){
     if(upList.size()==0&&downList.size()==0){ return -1;}
     int index = ConfLoader::Instance()->getLSANum();
     ConfLoader::Instance()->addLSA(index, upList, downList);
+    cout << m_id<<"Updating Grid" << endl;
     return index;
 };
 
@@ -360,6 +363,7 @@ void Ipv4SRPRouting::handleMessage(Ptr<const Packet> packet){
 }
 
 void Ipv4SRPRouting::addNeighbor(int node){
+    m_DownLink.erase(std::remove(m_DownLink.begin(), m_DownLink.end(), node), m_DownLink.end());
     vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
     for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
         map<int, int> item = it->second;
@@ -381,7 +385,8 @@ void Ipv4SRPRouting::addNeighbor(int node){
     sendLSAMessage(num);
 }
 
-void Ipv4SRPRouting::removeNeighbor(int node){  
+void Ipv4SRPRouting::removeNeighbor(int node){
+    m_DownLink.push_back(node);
     vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
     for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
         map<int, int> item = it->second;
@@ -468,6 +473,7 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
       if(it->first.contains(dest)){
           //out_interface = it->second;
           int size = it->second.size();
+          if(size==0) break;
           //ECMP hash
           int choice = (int)(source.Get()+dest.Get()) % size;
           out_interface = it->second[choice];
@@ -482,23 +488,6 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
   int destInterface = ConfLoader::Instance()->calcDestInterfaceBySource(m_id, out_interface);
   Ptr<Ipv4> to_ipv4 = ConfLoader::Instance()->getNodeContainer().Get(destNode)->GetObject<Ipv4SRPRouting>()->getIpv4();
   cout << Simulator::Now() << "Route from this node "<<m_id <<" on interface " << out_interface <<" to Node " << destNode << " on interface " << destInterface << endl;
-  
-  PointerValue ptr;
-  m_ipv4->GetNetDevice (out_interface)->GetAttribute("TxQueue", ptr);
-  int current = ptr.Get<Queue> ()->GetNPackets() ;
-
-  UintegerValue limit;
-  ptr.Get<Queue> ()->GetAttribute ("MaxPackets", limit);
-  int total = limit.Get ();
-
-  float percent = current*1.0/total;
-  cout << "Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
-
-  if(percent>ConfLoader::Instance()->getCongestionWaningLimit()){
-      cout << "Remove " << destNode << " from Neigbors; Update neighbors of " << m_id << endl;
-      //CheckTxQueue();
-      //updateNeighbors();
-  }
 
   Ptr<Ipv4Route> rtentry = Create<Ipv4Route> ();
   rtentry->SetDestination (to_ipv4->GetAddress (destInterface, 0).GetLocal ());
@@ -508,8 +497,22 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
   return rtentry;
 }
 
+
 void Ipv4SRPRouting::CheckTxQueue(){
-    m_CurNeighbors.clear();
+
+    m_LastCheckTime = Simulator::Now();
+    vector<int> lastAvailableNodes = getAvailableNodes(m_Grid);
+    
+    for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
+        map<int, int> item = it->second;
+        for(map<int, int>::iterator it2 = item.begin(); it2 != item.end(); ++it2){
+            if(it2->second%2==1){
+                it2->second--;
+            }
+        }
+        it->second = item;
+    }
+
     int n = m_ipv4->GetNInterfaces();
     for(int i=1; i< n; i++){
       PointerValue ptr;
@@ -524,9 +527,32 @@ void Ipv4SRPRouting::CheckTxQueue(){
       cout << i << "/" << n << " ;Percent: " << percent <<" ;Total: " << total << " ;Current: " << current << endl;
 
       if(percent<=ConfLoader::Instance()->getCongestionWaningLimit()){
-          m_CurNeighbors[ConfLoader::Instance()->getNodeByInterface(m_id,i)] = Simulator::Now();
+          int node = ConfLoader::Instance()->getNodeByInterface(m_id,i);
+          if(find(m_DownLink.begin(), m_DownLink.end(), node)==m_DownLink.end()){
+                  for(map<int, map<int, int> >::iterator it = m_Grid.begin(); it!=m_Grid.end(); ++it){
+                      map<int, int> item = it->second;
+                      for(map<int, int>::iterator it2 = item.begin(); it2 != item.end(); ++it2){
+                          if(node==it2->first && (it2->second%2==0)){
+                            it2->second++;
+                            break;
+                          }
+                      }
+                      it->second = item;
+                  }
+          }
+      }else{
+          cout << m_id << "interface " << i << "exceed" << endl;
       }
     }
+    
+    vector<int> curAvailableNodes = getAvailableNodes(m_Grid);
+    reCalculate();
+
+    int num = diffVector(lastAvailableNodes, curAvailableNodes);
+    if( num<0 ){
+        return;
+    }
+    sendLSAMessage(num);
 }
 
 Ptr<Ipv4Route>

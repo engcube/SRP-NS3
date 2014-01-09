@@ -66,7 +66,6 @@ Ipv4SRPRoutingHelper::Create (Ptr<Node> node) const
   //ConfLoader::Instance()->UpdateSRPGrid(node->GetId(), mSRPRoutingTable);
   //node->GetObject<SRPRouter>()->GetRoutingProtocol()->SetSRPRoutingTable (mSRPRoutingTable);
   node->AggregateObject(routing);
-  cout << "Create Helper" << endl;
   return routing;
 }
 

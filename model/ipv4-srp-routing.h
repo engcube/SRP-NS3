@@ -157,7 +157,7 @@ private:
 
   void Dijkstra();
   void reCalculate();
-  
+
   void sendMessage(Ipv4Address ip, Ptr<Packet> packet);
   void send2Peer(Ptr<Packet> packet);
   bool m_update_state;
@@ -172,6 +172,7 @@ private:
   map<int, int> m_LinkStateDatabase;
 
   map<int, map<int, int> > m_Grid;
+  vector<int> m_DownLink;
 
   int m_id;
   /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
@@ -186,7 +187,7 @@ private:
   Ptr<Ipv4Route> LookupSRPRoutingTable (Ipv4Address source, Ipv4Address dest);
 
   Ptr<Ipv4> m_ipv4;
-
+  Time m_LastCheckTime;
 };
 
 } // Namespace ns3

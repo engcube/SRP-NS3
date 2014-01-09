@@ -22,7 +22,6 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("SRPExample");
 
-int action_time = 0;
 
 int downNode1 = 0;
 int downInterface1 = 3;
@@ -50,8 +49,9 @@ void init(){
 }
 
 void update(){
-  //cout << "----------------update---------"<<endl;
-  action_time ++;
+  for(int i=0; i<ConfLoader::Instance()->getTotalNum()+ConfLoader::Instance()->getToRNum(); i++){
+        ConfLoader::Instance()->getNodeContainer().Get(i)->GetObject<Ipv4SRPRouting>()->update();
+  }
 }
 
 void Hello(){
@@ -78,19 +78,49 @@ void printTxInfo(int node, int index){
 }
 
 void statistics(){
-    printTxInfo(10,1);
-    printTxInfo(4,1);
-    printTxInfo(4,2);
 
     printTxInfo(8,1);
     printTxInfo(2,1);
     printTxInfo(2,2);
 
-    printTxInfo(0,2);
-    printTxInfo(1,2);
-    printTxInfo(3,3);
+    printTxInfo(9,1);
     printTxInfo(3,1);
     printTxInfo(3,2);
+
+    printTxInfo(10,1);
+    printTxInfo(4,1);
+    printTxInfo(4,2);
+
+    printTxInfo(11,1);
+    printTxInfo(5,1);
+    printTxInfo(5,2);
+
+    printTxInfo(0,1);
+    printTxInfo(0,2);
+    printTxInfo(0,3);
+    printTxInfo(0,4);
+
+    printTxInfo(1,1);
+    printTxInfo(1,2);
+    printTxInfo(1,3);
+    printTxInfo(1,4);
+
+    printTxInfo(2,3);
+    printTxInfo(3,3);
+    printTxInfo(4,3);
+    printTxInfo(5,3);
+}
+
+void createApplication(int source, int dest, int port, string rate, int size, float start, float stop){
+  cout << "Create Applications " << source << " : " << dest << " : "<< port << " : "<< rate << " : "<< size << " : "<< start << " : "<< stop << endl;
+
+  OnOffHelper onoff ("ns3::UdpSocketFactory", 
+                     Address (InetSocketAddress (ConfLoader::Instance()->getNodeContainer().Get(dest)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
+                     //Address (InetSocketAddress ("255.255.255.255", port)));
+  onoff.SetConstantRate (DataRate (rate), size);
+  ApplicationContainer apps = onoff.Install (ConfLoader::Instance()->getNodeContainer().Get (source));
+  apps.Start (Seconds (start));
+  apps.Stop (Seconds (stop));
 }
 
 int main (int argc, char *argv[])
@@ -114,25 +144,24 @@ int main (int argc, char *argv[])
   int total = nNodes + TOR_NUM;
   float app_start_time = 1.0;
   float app_stop_time = 10.0;
-  float listen_app_stop_time = 55.0;
   uint32_t stopTime = 60;
   string dataRate = "1Gbps";//"1Gbps";
   string delay = "0ms";
   string dest_ip = "10.0.1.2";
   string sendRate = "10Mb/s";//"100Mb/s";
-  string dequeGap = "0.5ms";
+  string dequeGap = "0.3ms";
   uint32_t packetReceiveDelay = 0;
-  int maxPackets = 10000;
+  int maxPackets = 1000;
   uint16_t port = 9;   // Discard port (RFC 863)
   int sendNode = nNodes+2;
   int destNode = nNodes+1;
-  int destNode2 = nNodes + 2;
-  int sendNode2 = nNodes + 0;
+  int sendNode2 = nNodes+0;
+  int destNode2 = nNodes+1;
   uint32_t packetSize = 512;
-  float CONGESTION_WARNING_LIMIT = 0.85;
+  float CONGESTION_WARNING_LIMIT = 0.98;
   float CALCULATE_COST = 0.001;
-  //int simulateTime = (int)app_stop_time;
-  //int simulateInterval = 3;
+  float simulateTime = app_stop_time;
+  float simulateInterval = 0.5;
   //float downTime = 2;
   //float upTime  = 8;
 
@@ -295,41 +324,18 @@ int main (int argc, char *argv[])
 
   Config::Set ("/NodeList/*/DeviceList/*/TxQueue/MaxPackets", UintegerValue (maxPackets));
   //cout << destNode << endl;
-  OnOffHelper onoff ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (c.Get(destNode)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
-                     //Address (InetSocketAddress ("255.255.255.255", port)));
-
-  onoff.SetConstantRate (DataRate (sendRate), packetSize);
-  ApplicationContainer apps = onoff.Install (c.Get (sendNode));
-
-  apps.Start (Seconds (app_start_time));
-  apps.Stop (Seconds (app_stop_time));
-  
-  OnOffHelper onoff2 ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (c.Get(destNode2)->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), port)));
-
-  onoff2.SetConstantRate (DataRate (sendRate), packetSize);
-  apps = onoff.Install (c.Get (sendNode2));
-
-  apps.Start (Seconds (app_start_time));
-  apps.Stop (Seconds (app_stop_time));
+  createApplication(sendNode, destNode, port, sendRate, packetSize, app_start_time, app_stop_time);
+  createApplication(sendNode2, destNode2, port, sendRate, packetSize, app_start_time, app_stop_time);
 
   // Create a packet sink to receive these packets
+  ApplicationContainer apps;
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
                          Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
   for(int i=CORE_NUM; i< CORE_NUM+TOR_NUM;i++){  
     apps = sink.Install (c.Get (i));
   }
-  apps.Start (Seconds (app_start_time));
-  apps.Stop (Seconds (listen_app_stop_time));
-
-  /*Ptr<OutputStreamWrapper> routintable = Create<OutputStreamWrapper>("routingtable",std::ios::out);
-  for(int i=0;i<total;i++){
-    //ipv4RoutingHelper.PrintRoutingTableAt(Seconds(0), c.Get(i), routintable);
-    //ipv4RoutingHelper.PrintRoutingTableAt(Seconds(10), c.Get(i), routintable);
-    //ipv4RoutingHelper.PrintRoutingTableAt(Seconds(app_stop_time), c.Get(i), routintable);
-    //ipv4RoutingHelper.PrintRoutingTableAt(Seconds(stopTime), c.Get(i), routintable);
-  }*/
+  apps.Start (Seconds (0));
+  apps.Stop (Seconds (stopTime));
 
   for(int i = 0; i< total; i++){
       cout << c.Get(i)->GetObject<Ipv4SRPRouting>()->toString() << endl;
@@ -338,7 +344,6 @@ int main (int argc, char *argv[])
   //Simulator::Schedule(Seconds(10), &action, c.Get(0));
 
   cout << "Run Simulation." << endl;
-  
   //Ptr<Node> n1 = c.Get (downNode1);
   //Ptr<Ipv4> ipv4 = n1->GetObject<Ipv4> ();
   // The first ifIndex is 0 for loopback, then the first p2p is numbered 1,
@@ -350,12 +355,12 @@ int main (int argc, char *argv[])
   //Simulator::Schedule (Seconds (downTime+ findDelay ),&downAction);
   //Simulator::Schedule (Seconds (upTime),&Ipv4::SetUp, ipv4, ipv4ifIndex);
   //Simulator::Schedule (Seconds (upTime+ findDelay ),&upAction);
-
-  /*for(int i=1; i<simulateTime/simulateInterval;i++){
+  int N =(int)(simulateTime/simulateInterval);
+  for(int i=1; i<N;i++){
     Time onInterval = Seconds (i*simulateInterval);
     Simulator::Schedule (onInterval, &update);
   }
-
+/*
   int N = stopTime/HelloInterval;
   for(int i=0; i< N; i++){
     Time onInterval = Seconds(i*HelloInterval);
