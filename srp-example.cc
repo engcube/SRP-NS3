@@ -135,8 +135,8 @@ int main (int argc, char *argv[])
   //int UnavailableInterval = 3;
   //int HelloInterval = 2;
   //float CheckNeighborInterval = 0.1;
-  int CORE_NUM = 2;
-  int TOR_NUM = 4;
+  int CORE_NUM = 4;
+  int TOR_NUM = 8;
   int BORDER_NUM = 2;
   int SUBNET_MASK = 24;
   uint32_t ADDRESS_START = 0x0a000000; // 10.0.0.1
@@ -153,10 +153,10 @@ int main (int argc, char *argv[])
   uint32_t packetReceiveDelay = 0;
   int maxPackets = 1000;
   uint16_t port = 9;   // Discard port (RFC 863)
-  int sendNode = nNodes+2;
+  /*int sendNode = nNodes+2;
   int destNode = nNodes+1;
   int sendNode2 = nNodes+0;
-  int destNode2 = nNodes+1;
+  int destNode2 = nNodes+1;*/
   uint32_t packetSize = 512;
   float CONGESTION_WARNING_LIMIT = 0.98;
   float CALCULATE_COST = 0.001;
@@ -324,9 +324,13 @@ int main (int argc, char *argv[])
 
   Config::Set ("/NodeList/*/DeviceList/*/TxQueue/MaxPackets", UintegerValue (maxPackets));
   //cout << destNode << endl;
-  createApplication(sendNode, destNode, port, sendRate, packetSize, app_start_time, app_stop_time);
-  createApplication(sendNode2, destNode2, port, sendRate, packetSize, app_start_time, app_stop_time);
-
+  //createApplication(sendNode, destNode, port, sendRate, packetSize, app_start_time, app_stop_time);
+  //createApplication(sendNode2, destNode2, port, sendRate, packetSize, app_start_time, app_stop_time);
+  
+  createApplication(nNodes+0, nNodes+4, port, sendRate, packetSize, app_start_time, app_stop_time);
+  createApplication(nNodes+1, nNodes+4, port, sendRate, packetSize, app_start_time, app_stop_time);
+  createApplication(nNodes+6, nNodes+4, port, sendRate, packetSize, app_start_time, app_stop_time);
+  createApplication(nNodes+3, nNodes+4, port, sendRate, packetSize, app_start_time, app_stop_time);
   // Create a packet sink to receive these packets
   ApplicationContainer apps;
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -350,7 +354,7 @@ int main (int argc, char *argv[])
   // then the next p2p is numbered 2
   //uint32_t ipv4ifIndex = downInterface1;
   Simulator::Schedule (Seconds (0), &init);
-  Simulator::Schedule (Seconds (stopTime), &statistics);
+  //Simulator::Schedule (Seconds (stopTime), &statistics);
   //Simulator::Schedule (Seconds (downTime),&Ipv4::SetDown, ipv4, ipv4ifIndex);
   //Simulator::Schedule (Seconds (downTime+ findDelay ),&downAction);
   //Simulator::Schedule (Seconds (upTime),&Ipv4::SetUp, ipv4, ipv4ifIndex);

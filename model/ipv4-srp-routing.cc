@@ -475,8 +475,11 @@ Ptr<Ipv4Route> Ipv4SRPRouting::LookupSRPRoutingTable (Ipv4Address source, Ipv4Ad
           int size = it->second.size();
           if(size==0) break;
           //ECMP hash
-          int choice = (int)(source.Get()+dest.Get()) % size;
+          int choice = (int)(source.Get()+dest.Get()) /100 % size;
           out_interface = it->second[choice];
+          if(m_id>=ConfLoader::Instance()->getCoreNum() && m_id <ConfLoader::Instance()->getCoreNum()+ConfLoader::Instance()->getToRNum()){
+            cout << m_id << "Choice " << out_interface << " "<< source << " " << dest << endl;
+          }
           break;
       }
   }
