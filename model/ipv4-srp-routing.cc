@@ -351,7 +351,8 @@ void Ipv4SRPRouting::handleMessage(Ptr<const Packet> packet){
             }else if(type == 2){
                 //cout << "receive update message from " << (int)from << endl;
                 uint32_t index = tag.getLSAIndex();
-                checkDiff(from, index);
+                Simulator::Schedule (Seconds (ConfLoader::Instance()->getLSPDelay()), &Ipv4SRPRouting::checkDiff, this, from, index);
+                //checkDiff(from, index);
             }else{
                 //cout << "receive not-hello message" << endl;
             }

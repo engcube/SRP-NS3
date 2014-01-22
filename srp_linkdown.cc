@@ -164,8 +164,8 @@ int main (int argc, char *argv[])
   float simulateInterval = 0.5;
   float downTime = 2;
   //float upTime  = 8;
-
-  float findDelay = 0.1; //s
+  float lspDelay = 0.01;
+  float findDelay = 0.02; //s
   //ConfLoader::Instance()->setUnavailableInterval(UnavailableInterval);
   ConfLoader::Instance()->setCoreNum(CORE_NUM);
   ConfLoader::Instance()->setToRNum(TOR_NUM);
@@ -176,6 +176,7 @@ int main (int argc, char *argv[])
   ConfLoader::Instance()->setPacketReceiveDelay(packetReceiveDelay);
   ConfLoader::Instance()->setCongestionWaningLimit(CONGESTION_WARNING_LIMIT);
   ConfLoader::Instance()->setCalculateCost(CALCULATE_COST);
+  ConfLoader::Instance()->setLSPDelay(lspDelay);
   CommandLine cmd;
   bool enableFlowMonitor = false;
   cmd.AddValue ("EnableMonitor", "Enable Flow Monitor", enableFlowMonitor);
